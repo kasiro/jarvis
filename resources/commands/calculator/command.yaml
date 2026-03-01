@@ -1,0 +1,29 @@
+list:
+- command:
+    action: python
+    script: calc_on.py
+  voice:
+    sounds:
+    - ok1
+    - ok2
+    - ok3
+  phrases:
+  - включи калькулятор
+  - открой калькулятор
+  - покажи калькулятор
+  - запусти калькулятор
+  - калькулятор
+
+- command:
+    action: python
+    script: calc_off.py
+  voice:
+    sounds:
+    - ok1
+    - ok2
+    - ok3
+  phrases:
+  - закрой калькулятор
+  - отключи калькулятор
+  - выключи калькулятор
+  - убери калькулятор

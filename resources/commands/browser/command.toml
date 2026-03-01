@@ -1,0 +1,80 @@
+[[commands]]
+id = "browser_open"
+type = "python"
+script = "sh/open_browser.py"
+sounds.ru = ["ok1", "ok2", "ok3", "ok4"]
+sounds.en = ["ok1", "ok2", "ok3"]
+sounds.ua = ["ok1", "ok2", "ok3", "ok4", "ok5", "ok6"]
+
+phrases.ru = [
+    "открой браузер",
+    "запусти браузер",
+    "включи браузер",
+    "браузер открой",
+    "нужен браузер",
+]
+phrases.en = [
+    "open browser",
+    "launch browser",
+    "start browser",
+    "i need browser",
+]
+phrases.ua = [
+    "відкрий браузер",
+    "запусти браузер",
+    "увімкни браузер",
+    "потрібен браузер",
+]
+
+[[commands]]
+id = "open_ide"
+type = "python"
+script = "sh/open_ide.py"
+sounds.ru = ["ok1", "ok2", "ok3", "ok4"]
+phrases.ru = [
+    "открой редактор кода",
+    "запусти редактор кода",
+    "включи редактор кода",
+    "редактор кода открой",
+    "нужен редактор кода",
+    "открой редактор",
+    "запусти редактор",
+    "включи редактор",
+]
+
+[[commands]]
+id = "close_ide"
+type = "python"
+script = "sh/close_ide.py"
+sounds.ru = ["ok1", "ok2", "ok3", "ok4"]
+phrases.ru = [
+    "закрой редактор кода",
+    "выключи редактор кода",
+    "закрой редактор",
+    "выключи редактор"
+]
+
+[[commands]]
+id = "open_web_search"
+type = "cli"
+cli_cmd = "xdg-open https://ya.ru"
+sounds.ru = ["ok1", "ok2", "ok3", "ok4"]
+phrases.ru = [
+    "открой поиск",
+    "запусти поиск",
+    "включи поиск"
+]
+
+[[commands]]
+id = "browser_close"
+type = "python"
+script = "sh/browser_close.py"
+sounds.ru = ["ok1", "ok2", "ok3", "ok4"]
+sounds.en = ["ok1", "ok2", "ok3"]
+sounds.ua = ["ok1", "ok2", "ok3", "ok4", "ok5", "ok6"]
+phrases.ru = [
+    "закрой браузер",
+    "закрой все браузеры",
+    "выключи браузер",
+    "убери браузер",
+]

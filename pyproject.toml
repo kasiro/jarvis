@@ -1,0 +1,15 @@
+[project]
+name = "jarvis"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "pyautogui>=0.9.54",
+    "python-ydotool>=1.1.0",
+]
+
+[tool.uv.workspace]
+members = [
+    "resources/commands",
+]

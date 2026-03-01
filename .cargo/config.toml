@@ -1,0 +1,44 @@
+# Pickle Rick's Optimization Config 🥒
+# Ускоряем сборку как можем!
+
+[build]
+# Количество параллельных компиляций (по умолчанию = количеству ядер CPU)
+# Для 4 ядер ставим 4 - можно увеличить до 6 если есть RAM
+jobs = 2
+
+# Использовать ld.lld вместо ld (быстрее линковка в 2-3 раза!)
+rustflags = ["-C", "link-arg=-fuse-ld=lld"]
+
+[target.x86_64-unknown-linux-gnu]
+# Оптимизации для релизной сборки
+rustflags = [
+    "-C", "target-cpu=native",  # Использовать инструкции конкретного CPU
+]
+
+[profile.release]
+# Баланс между размером и скоростью сборки
+opt-level = 2              # Средние оптимизации (быстрее чем "z")
+lto = false                # ❌ ОТКЛЮЧИТЬ LTO (очень долго и много RAM!)
+codegen-units = 16         # Больше параллельных юнитов
+strip = false              # Не strip'ить (быстрее сборка)
+
+# Быстрая сборка для отладки
+[profile.dev]
+opt-level = 0
+debug = false  # Отключаем debug info для ускорения
+split-debuginfo = "off"
+
+# Профиль для быстрых тестов
+[profile.fast]
+inherits = "dev"
+opt-level = 1
+lto = false
+codegen-units = 16
+
+# Профиль для ФИНАЛЬНОГО релиза (когда нужно минимальный размер)
+[profile.release-small]
+inherits = "release"
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = true

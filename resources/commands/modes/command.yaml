@@ -1,0 +1,56 @@
+list:
+  # Kid Mode ON
+  - command:
+      action: python
+      script: kid_mode_on.py
+    voice:
+      sounds:
+        - ok1
+        - ok2
+        - ok3
+    phrases:
+      - детский режим
+      - запусти детский режим
+      - протокол мультики
+      - запусти протокол мультики
+      - включи детский режим
+
+  # Kid Mode OFF
+  - command:
+      action: python
+      script: kid_mode_off.py
+    voice:
+      sounds:
+        - ok1
+        - ok2
+        - ok3
+    phrases:
+      - обычный режим
+      - выключи детский режим
+      - деактивируй детский режим
+      - выход из детского режима
+
+  # Dev Mode ON
+  - command:
+      action: python
+      script: dev_mode_on.py
+    voice:
+      sounds:
+        - ok1
+        - ok2
+    phrases:
+      - режим разработчика
+      - dev режим
+      - включи режим разработчика
+
+  # Check Mode
+  - command:
+      action: python
+      script: check_mode.py
+    voice:
+      sounds:
+        - ok1
+    phrases:
+      - какой режим
+      - текущий режим
+      - покажи режим

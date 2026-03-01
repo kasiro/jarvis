@@ -1,0 +1,41 @@
+[[commands]]
+id = "weather"
+type = "python"
+script = "weather.py"
+timeout = 10000
+
+sounds.ru = ["ok1", "ok2", "ok3"]
+sounds.en = ["ok1", "ok2", "ok3"]
+
+phrases.ru = [
+    "какая погода в {city}",
+    "какая погода на улице",
+    "погода {city}",
+    "погода",
+    "что у нас за окном",
+    "что у нас там за окном",
+    "что у нас по погоде",
+    "что у нас там по погоде",
+    "какая погода",
+    "погода сегодня",
+    "что с погодой",
+]
+phrases.en = ["what's the weather in {city}", "weather in {city}"]
+
+[commands.slots.city]
+entity = "city name"
+context = ["in", "for", "at", "в", "для"]
+
+
+[[commands]]
+id = "set_city"
+type = "lua"
+script = "set_city.lua"
+sandbox = "standard"
+timeout = 5000
+
+sounds.ru = ["ok1", "ok2"]
+sounds.en = ["ok1", "ok2"]
+
+phrases.ru = ["установи город", "поменяй город"]
+phrases.en = ["set city", "change city"]
