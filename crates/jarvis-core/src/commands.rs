@@ -578,12 +578,15 @@ fn execute_python(
     });
 
     // Spawn Python server via uv run from project root (uses root .venv)
+    // Добавляем resources/commands в PYTHONPATH для импорта jarvis_server
     let mut child = Command::new("uv")
-        .args(["run", "python", "-m", "jarvis_server"])
-        .current_dir(&APP_DIR)  // Запуск из корня проекта
+        .args(["run", "--with", "aiohttp", "python", "-m", "jarvis_server"])
+        .current_dir(&*APP_DIR)  // Запуск из корня проекта (дереференсим Lazy<PathBuf>)
+        .env("PYTHONPATH", APP_DIR.join("resources/commands"))  // Добавляем путь к модулям
+        .env("RUST_LOG", "off")  // Отключаем Rust логи в stderr
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
+        .stderr(Stdio::null())  // Игнорируем stderr (логи идут в лог Jarvis)
         .spawn()
         .map_err(|e| format!("Failed to spawn Python: {}", e))?;
 

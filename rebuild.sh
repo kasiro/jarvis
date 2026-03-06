@@ -13,6 +13,29 @@ echo ""
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
+# Start timer
+START_TIME=$(date +%s)
+
+# Trap to always show elapsed time on exit
+show_elapsed_time() {
+    END_TIME=$(date +%s)
+    ELAPSED=$((END_TIME - START_TIME))
+    echo ""
+    
+    # Format time: minutes + seconds if > 60s
+    if [ $ELAPSED -ge 60 ]; then
+        MINUTES=$((ELAPSED / 60))
+        SECONDS=$((ELAPSED % 60))
+        print_info "⏱ Время выполнения: ${MINUTES}m ${SECONDS}s"
+        notify-send "🥒 Jarvis Rebuild" "Сборка завершена за ${MINUTES}m ${SECONDS}s" -t 5000
+    else
+        print_info "⏱ Время выполнения: ${ELAPSED}s"
+        if [ $ELAPSED -ge 10 ]; then
+            notify-send "🥒 Jarvis Rebuild" "Сборка завершена за ${ELAPSED}s" -t 5000
+        fi
+    fi
+}
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -46,6 +69,8 @@ CLEAN_BUILD=false
 USE_RUSTPOTTER=false
 BUILD_APP_ONLY=false
 BUILD_GUI=false  # GUI собирается только при явном указании --gui
+USE_DEV=false    # Использовать dev профиль (быстрая отладочная сборка)
+USE_FAST=false   # Использовать fast профиль (оптимизированная dev сборка)
 TAURI_TIMEOUT=600  # 10 минут на сборку Tauri
 
 for arg in "$@"; do
@@ -70,6 +95,14 @@ for arg in "$@"; do
             BUILD_GUI=true
             shift
             ;;
+        --dev)
+            USE_DEV=true
+            shift
+            ;;
+        --fast)
+            USE_FAST=true
+            shift
+            ;;
         --help)
             echo "Использование: $0 [OPTIONS]"
             echo ""
@@ -79,13 +112,18 @@ for arg in "$@"; do
             echo "  --rustpotter   Собрать с RustPotter wake-word"
             echo "  --app          Собрать только jarvis-app (автоматически включает core)"
             echo "  --gui          Собрать jarvis-app + jarvis-gui (Tauri)"
+            echo "  --dev          Использовать dev профиль (быстрая отладочная сборка)"
+            echo "  --fast         Использовать fast профиль (оптимизированная dev сборка)"
             echo "  --help         Показать эту справку"
             echo ""
             echo "EXAMPLES:"
             echo "  ./rebuild.sh --app              # Только app + core"
             echo "  ./rebuild.sh --gui              # App + GUI"
+            echo "  ./rebuild.sh --dev              # Dev сборка (без оптимизаций)"
+            echo "  ./rebuild.sh --fast             # Fast сборка (легкие оптимизации)"
             echo "  ./rebuild.sh                    # Только app (GUI не собирается)"
             echo ""
+            show_elapsed_time
             exit 0
             ;;
     esac
@@ -151,6 +189,7 @@ if [ $MISSING_LIBS -eq 1 ]; then
     echo "  # Arch Linux:"
     echo "  sudo pacman -S xdotool vosk alsa-lib lua"
     echo ""
+    show_elapsed_time
     exit 1
 fi
 
@@ -176,7 +215,6 @@ else
     export PKG_CONFIG_PATH="/usr/lib/pkgconfig:/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH"
 fi
 
-export CARGO_BUILD_JOBS="4"
 print_success "Переменные установлены"
 echo ""
 
@@ -201,6 +239,21 @@ else
 fi
 
 # Step 3: Build based on flags
+
+# Determine build profile
+if [ "$USE_DEV" = true ]; then
+    BUILD_PROFILE="dev"
+    BUILD_DIR="debug"
+    print_info "Режим: dev (без оптимизаций)"
+elif [ "$USE_FAST" = true ]; then
+    BUILD_PROFILE="fast"
+    BUILD_DIR="fast"
+    print_info "Режим: fast (легкие оптимизации)"
+else
+    BUILD_PROFILE="release"
+    BUILD_DIR="release"
+    print_info "Режим: release (оптимизированная сборка)"
+fi
 
 # Generate build version string for logging
 BUILD_VERSION="jarvis-$(git rev-parse --short HEAD 2>/dev/null || echo 'unknown')"
@@ -234,33 +287,34 @@ elif [ "$BUILD_APP_ONLY" = true ]; then
     # Только app (автоматически собирает core)
     print_status "Сборка jarvis-app (включает jarvis-core)..."
     if [ "$USE_RUSTPOTTER" = true ]; then
-        cargo build --release -p jarvis-app --features jarvis-core/rustpotter_wake
-        print_success "jarvis-app собран (release + rustpotter)"
+        cargo build --profile "$BUILD_PROFILE" -p jarvis-app --features jarvis-core/rustpotter_wake
+        print_success "jarvis-app собран ($BUILD_PROFILE + rustpotter)"
     else
-        cargo build --release -p jarvis-app
-        print_success "jarvis-app собран"
+        cargo build --profile "$BUILD_PROFILE" -p jarvis-app
+        print_success "jarvis-app собран ($BUILD_PROFILE)"
     fi
     echo ""
 
     # Копирование ресурсов
     print_status "Запуск post_build.sh..."
-    bash "$SCRIPT_DIR/post_build.sh"
-    print_success "Ресурсы скопированы в target/release/"
+    bash "$SCRIPT_DIR/post_build.sh" --profile "$BUILD_PROFILE"
+    print_success "Ресурсы скопированы в target/$BUILD_DIR/"
     echo ""
 
     # Summary
     echo "======================================"
     print_success "🥒 Сборка завершена!"
     echo ""
-    echo "Расположение бинарников (release):"
-    echo "  - target/release/jarvis-app"
+    echo "Расположение бинарников ($BUILD_DIR):"
+    echo "  - target/$BUILD_DIR/jarvis-app"
     echo ""
     echo "Расположение ресурсов:"
-    echo "  - target/release/resources/"
+    echo "  - target/$BUILD_DIR/resources/"
     echo ""
     echo "Для запуска Jarvis:"
-    echo "  ./target/release/jarvis-app"
+    echo "  ./target/$BUILD_DIR/jarvis-app"
     echo "======================================"
+    show_elapsed_time
     exit 0
 else
     # Полная сборка всех компонентов
@@ -268,11 +322,11 @@ else
     # Step 1: jarvis-app (автоматически собирает jarvis-core)
     print_status "Сборка jarvis-app (включает jarvis-core)..."
     if [ "$USE_RUSTPOTTER" = true ]; then
-        cargo build --release -p jarvis-app --features jarvis-core/rustpotter_wake
-        print_success "jarvis-app собран (release + rustpotter)"
+        cargo build --profile "$BUILD_PROFILE" -p jarvis-app --features jarvis-core/rustpotter_wake
+        print_success "jarvis-app собран ($BUILD_PROFILE + rustpotter)"
     else
-        cargo build --release -p jarvis-app
-        print_success "jarvis-app собран"
+        cargo build --profile "$BUILD_PROFILE" -p jarvis-app
+        print_success "jarvis-app собран ($BUILD_PROFILE)"
     fi
     echo ""
 
@@ -281,7 +335,7 @@ else
         print_status "Сборка jarvis-gui (Tauri)..."
 
         # Проверяем путь к GUI бинарнику
-        GUI_BIN_PATH="$SCRIPT_DIR/src-tauri/target/release/jarvis-gui"
+        GUI_BIN_PATH="$SCRIPT_DIR/src-tauri/target/$BUILD_DIR/jarvis-gui"
 
         if [ -f "$GUI_BIN_PATH" ]; then
             print_info "GUI бинарник уже существует: $GUI_BIN_PATH"
@@ -290,7 +344,7 @@ else
             if command -v cargo-tauri &> /dev/null; then
                 print_info "Запуск cargo tauri build (таймаут: ${TAURI_TIMEOUT}s)..."
 
-                if timeout "$TAURI_TIMEOUT" cargo tauri build --verbose 2>&1; then
+                if timeout "$TAURI_TIMEOUT" cargo tauri build --profile "$BUILD_PROFILE" --verbose 2>&1; then
                     print_success "jarvis-gui собран"
                 else
                     EXIT_CODE=$?
@@ -313,16 +367,16 @@ else
 
     # Step 3: post_build
     print_status "Запуск post_build.sh..."
-    bash "$SCRIPT_DIR/post_build.sh"
-    print_success "Ресурсы скопированы в target/release/"
+    bash "$SCRIPT_DIR/post_build.sh" --profile "$BUILD_PROFILE"
+    print_success "Ресурсы скопированы в target/$BUILD_DIR/"
     echo ""
 
     # Summary
     echo "======================================"
     print_success "🥒 Пересборка завершена, Morty!"
     echo ""
-    echo "Расположение бинарников (release):"
-    echo "  - target/release/jarvis-app"
+    echo "Расположение бинарников ($BUILD_DIR):"
+    echo "  - target/$BUILD_DIR/jarvis-app"
     if [ "$USE_RUSTPOTTER" = true ]; then
         echo ""
         echo "🥒 RustPotter wake-word ВКЛЮЧЁН!"
@@ -330,13 +384,14 @@ else
         echo "   wake_word_engine = \"rustpotter\""
     fi
     if [ "$BUILD_GUI" = true ] && command -v cargo-tauri &> /dev/null; then
-        echo "  - src-tauri/target/release/jarvis-gui"
+        echo "  - src-tauri/target/$BUILD_DIR/jarvis-gui"
     fi
     echo ""
     echo "Расположение ресурсов:"
-    echo "  - target/release/resources/"
+    echo "  - target/$BUILD_DIR/resources/"
     echo ""
     echo "Для запуска Jarvis:"
-    echo "  ./target/release/jarvis-app"
+    echo "  ./target/$BUILD_DIR/jarvis-app"
     echo "======================================"
+    show_elapsed_time
 fi

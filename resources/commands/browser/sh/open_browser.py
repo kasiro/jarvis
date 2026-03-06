@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Browser launcher - открывает браузер или переключается на него"""
+
 import sys
 from pathlib import Path
 
@@ -19,7 +20,7 @@ async def execute(context):
 
     # Используем AppManager для умного запуска (не блокирует)
     manager = AppManager()
-    manager.launch_or_move_background('zen-browser', 'zen', 1)
+    manager.launch_or_move_background("firefox", "firefox", 1)
 
     jarvis.log("info", "Browser ready")
     return {"success": True}

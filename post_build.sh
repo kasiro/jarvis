@@ -20,9 +20,20 @@ for arg in "$@"; do
     esac
 done
 
-TARGET_DIR="target/$BUILD_PROFILE"
+# Map profile to directory name
+case "$BUILD_PROFILE" in
+    dev)
+        TARGET_DIR="target/debug"
+        ;;
+    fast)
+        TARGET_DIR="target/fast"
+        ;;
+    *)
+        TARGET_DIR="target/$BUILD_PROFILE"
+        ;;
+esac
 
-echo "🥒 Post-build: Copying resources to $TARGET_DIR..."
+echo "🥒 Post-build: Copying resources..."
 
 # Remove old resources if they exist
 rm -rf "$TARGET_DIR/resources"
@@ -32,5 +43,3 @@ mkdir -p "$TARGET_DIR"
 
 # Copy resources
 cp -r resources/ "$TARGET_DIR/resources"
-
-echo "✓ Resources copied to $TARGET_DIR/resources/"

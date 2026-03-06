@@ -5,9 +5,10 @@
 # Количество параллельных компиляций (по умолчанию = количеству ядер CPU)
 # Для 4 ядер ставим 4 - можно увеличить до 6 если есть RAM
 jobs = 2
+rustc-wrapper = "sccache"
 
 # Использовать ld.lld вместо ld (быстрее линковка в 2-3 раза!)
-rustflags = ["-C", "link-arg=-fuse-ld=lld"]
+rustflags = ["-C", "link-arg=-fuse-ld=mold"]
 
 [target.x86_64-unknown-linux-gnu]
 # Оптимизации для релизной сборки
@@ -27,6 +28,7 @@ strip = false              # Не strip'ить (быстрее сборка)
 opt-level = 0
 debug = false  # Отключаем debug info для ускорения
 split-debuginfo = "off"
+codegen-units = 256
 
 # Профиль для быстрых тестов
 [profile.fast]

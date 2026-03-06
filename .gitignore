@@ -53,3 +53,5 @@ tree.txt
 
 # Ignore AI models
 /resources/models/*
+.pickle_sessions
+conductor

@@ -1,8 +1,9 @@
+import logging
 import subprocess
 import time
-import logging
 
 logger = logging.getLogger(__name__)
+
 
 class VPNController:
     """
@@ -12,9 +13,10 @@ class VPNController:
     - Запускает GUI процесс который подключается к сервису
     - Сервис создаёт интерфейс tun2 через tun2socks
     """
+
     def __init__(self, server_index=0, cleanup=False):
-        self.executable = '/usr/bin/AmneziaVPN'
-        self.interface_name = 'tun2'
+        self.executable = "/usr/bin/AmneziaVPN"
+        self.interface_name = "tun2"
         self.server_index = server_index
         # cleanup=False по умолчанию - не убиваем существующие процессы
         if cleanup:
@@ -24,7 +26,7 @@ class VPNController:
         """Завершает все процессы AmneziaVPN через doas pkill."""
         try:
             # Завершаем все процессы AmneziaVPN
-            subprocess.run(['doas', 'pkill', '-f', 'AmneziaVPN'], check=False)
+            subprocess.run(["doas", "pkill", "-f", "AmneziaVPN"], check=False)
             logger.info("Процессы AmneziaVPN завершены через doas")
         except Exception as e:
             logger.debug(f"Ошибка при завершении процессов: {e}")
@@ -33,24 +35,26 @@ class VPNController:
         """Проверяет, запущен ли процесс AmneziaVPN (GUI клиент)."""
         try:
             result = subprocess.run(
-                ['pgrep', '-f', 'AmneziaVPN'],
-                capture_output=True, text=True
+                ["pgrep", "-f", "AmneziaVPN"], capture_output=True, text=True
             )
             if result.returncode != 0 or not result.stdout.strip():
                 return False
 
             # Проверяем что запущен именно GUI клиент (не только сервис)
             # Сервис работает от root, клиент от пользователя
-            processes = result.stdout.strip().split('\n')
+            processes = result.stdout.strip().split("\n")
             for pid in processes:
                 try:
                     # Читаем cmdline процесса
-                    with open(f'/proc/{pid}/cmdline', 'r') as f:
+                    with open(f"/proc/{pid}/cmdline", "r") as f:
                         cmdline = f.read()
                         # Если это клиентский процесс (не сервис)
-                        if 'client/bin/AmneziaVPN' in cmdline or '/usr/bin/AmneziaVPN' in cmdline:
+                        if (
+                            "client/bin/AmneziaVPN" in cmdline
+                            or "/usr/bin/AmneziaVPN" in cmdline
+                        ):
                             return True
-                except (FileNotFoundError, PermissionError):
+                except FileNotFoundError, PermissionError:
                     continue
             return False
         except Exception:
@@ -60,11 +64,12 @@ class VPNController:
         """Проверяет, активен ли VPN по наличию интерфейса tun2."""
         try:
             result = subprocess.run(
-                ['ip', 'link', 'show', self.interface_name],
-                capture_output=True, text=True
+                ["ip", "link", "show", self.interface_name],
+                capture_output=True,
+                text=True,
             )
             # Проверяем что интерфейс существует и в состоянии UP
-            return result.returncode == 0 and 'UP' in result.stdout
+            return result.returncode == 0 and "UP" in result.stdout
         except Exception:
             return False
 
@@ -96,11 +101,11 @@ class VPNController:
         try:
             # Запускаем CLI клиент в фоне
             proc = subprocess.Popen(
-                [self.executable, '--connect', str(self.server_index)],
+                [self.executable, "--connect", str(self.server_index)],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 stdin=subprocess.DEVNULL,
-                start_new_session=True
+                start_new_session=True,
             )
             logger.info(f"Запущен AmneziaVPN CLI (PID {proc.pid})")
 
@@ -129,7 +134,7 @@ class VPNController:
 
         try:
             # Завершаем все процессы AmneziaVPN
-            subprocess.run(['doas', 'pkill', '-f', 'AmneziaVPN'], check=False)
+            subprocess.run(["doas", "pkill", "-f", "AmneziaVPN"], check=False)
 
             if not self.is_connected():
                 return "✅ VPN отключён"

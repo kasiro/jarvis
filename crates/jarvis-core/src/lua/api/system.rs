@@ -96,7 +96,10 @@ pub fn register(lua: &Lua, jarvis: &Table, sandbox: SandboxLevel) -> mlua::Resul
         #[cfg(target_os = "linux")]
         {
             let _ = Command::new("notify-send")
-                .args([&title, &message])
+                .arg(&title)
+                .arg(&message)
+                .arg("-t")
+                .arg("5000")
                 .spawn();
         }
         

@@ -1,13 +1,13 @@
-from subprocess import run, check_output, check_call, Popen, PIPE
-import subprocess
-from time import sleep
-import json
-import time
-import logging
 import ast
+import json
+import logging
+import subprocess
 import sys
+import time
 from pathlib import Path
-from typing import List, Dict, Optional, Any
+from subprocess import PIPE, Popen, check_call, check_output, run
+from time import sleep
+from typing import Any, Dict, List, Optional
 
 # Добавляем parent directory в path для импорта wayland
 parent_dir = str(Path(__file__).parent)
@@ -19,24 +19,30 @@ from wayland import WaylandController
 
 logger = logging.getLogger(__name__)
 
+
 class WindowManager:
-    """Управление окнами через D-Bus интерфейс Window Calls."""
+    """Управление окнами через D-Bus интерфейс window-calls@domandoman.xyz"""
 
     def __init__(self):
-        self.dest = 'org.gnome.Shell'
-        self.path = '/org/gnome/Shell/Extensions/Windows'
-        self.iface = 'org.gnome.Shell.Extensions.Windows'
+        self.dest = "org.gnome.Shell"
+        self.path = "/org/gnome/Shell/Extensions/Windows"
+        self.iface = "org.gnome.Shell.Extensions.Windows"
 
     def _call(self, method: str, *args) -> Any:
         """
         Вызывает D-Bus метод через gdbus и возвращает результат.
         """
         cmd = [
-            'gdbus', 'call', '--session',
-            '--dest', self.dest,
-            '--object-path', self.path,
-            '--method', f'{self.iface}.{method}',
-            *[str(arg) for arg in args]
+            "gdbus",
+            "call",
+            "--session",
+            "--dest",
+            self.dest,
+            "--object-path",
+            self.path,
+            "--method",
+            f"{self.iface}.{method}",
+            *[str(arg) for arg in args],
         ]
         try:
             output = check_output(cmd, stderr=PIPE, text=True)
@@ -61,7 +67,7 @@ class WindowManager:
         """
         Возвращает список всех окон с их свойствами.
         """
-        result = self._call('List')
+        result = self._call("List")
         try:
             windows = json.loads(result)
             return windows
@@ -77,7 +83,7 @@ class WindowManager:
         success = True
         for w in windows:
             try:
-                self._call('Minimize', str(w['id']))
+                self._call("Minimize", str(w["id"]))
             except:
                 success = False
         return success
@@ -90,18 +96,17 @@ class WindowManager:
         success = True
         for w in windows:
             try:
-                self._call('Unminimize', str(w['id']))
+                self._call("Unminimize", str(w["id"]))
             except:
                 success = False
         return success
 
     def is_running(self, wm_class: str):
         windows = self.get_windows()
-        wm_list = [wm['wm_class'] for wm in windows]
+        wm_list = [wm["wm_class"] for wm in windows]
         if wm_class in wm_list:
-                return True
+            return True
         return False
-
 
     def move_to_workspace(self, window_id: int, workspace: int) -> bool:
         """
@@ -109,7 +114,7 @@ class WindowManager:
         Возвращает True при успехе.
         """
         try:
-            self._call('MoveToWorkspace', window_id, workspace)
+            self._call("MoveToWorkspace", window_id, workspace)
             return True
         except Exception as e:
             logger.exception(f"Ошибка перемещения окна {window_id}")
@@ -127,7 +132,9 @@ class WindowManager:
             sleep(0.3)
         return False
 
-    def wait_for_new_window(self, before_ids: set, timeout: float = 10) -> Optional[int]:
+    def wait_for_new_window(
+        self, before_ids: set, timeout: float = 10
+    ) -> Optional[int]:
         """
         Ожидает появления нового окна, отсутствовавшего в before_ids.
         Возвращает ID нового окна или None.
@@ -135,7 +142,7 @@ class WindowManager:
         start = time.time()
         while time.time() - start < timeout:
             windows = self.get_windows()
-            current_ids = {w['id'] for w in windows}
+            current_ids = {w["id"] for w in windows}
             new_ids = current_ids - before_ids
             if new_ids:
                 return next(iter(new_ids))
@@ -151,9 +158,10 @@ class AppLauncher:
     #   --object-path /org/gnome/Shell/Extensions/Windows \
     #   --method org.gnome.Shell.Extensions.Windows.List
     APP_MAP = {
-        'zen-browser': {'cmd': ['zen-browser'], 'class': 'zen'},
-        'zed': {'cmd': ['zed'], 'class': 'dev.zed.Zed'},
-        'calculator': {'cmd': ['gnome-calculator'], 'class': 'org.gnome.Calculator'},
+        "zen-browser": {"cmd": ["zen-browser"], "class": "zen"},
+        "firefox": {"cmd": ["firefox"], "class": "firefox"},
+        "zed": {"cmd": ["zed"], "class": "dev.zed.Zed"},
+        "calculator": {"cmd": ["gnome-calculator"], "class": "org.gnome.Calculator"},
     }
 
     def __init__(self):
@@ -171,12 +179,12 @@ class AppLauncher:
         if not app_info:
             return f"❌ Неизвестное приложение: {app_name}. Доступны: {', '.join(self.APP_MAP.keys())}"
 
-        cmd = app_info['cmd']
+        cmd = app_info["cmd"]
 
         try:
             # Получаем список окон ДО запуска
             before_windows = self.wm.get_windows()
-            before_ids = {w['id'] for w in before_windows}
+            before_ids = {w["id"] for w in before_windows}
 
             # Запускаем приложение
             subprocess.Popen(cmd)
@@ -208,7 +216,7 @@ class AppLauncher:
         if not app_info:
             return f"❌ Неизвестное приложение: {app_name}. Доступны: {', '.join(self.APP_MAP.keys())}"
 
-        cmd = app_info['cmd']
+        cmd = app_info["cmd"]
 
         try:
             # Запускаем приложение в фоне
@@ -217,7 +225,7 @@ class AppLauncher:
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
-                start_new_session=True
+                start_new_session=True,
             )
 
             # Не ждём появления окна - возвращаем сразу
@@ -229,7 +237,6 @@ class AppLauncher:
 
 
 class AppManager:
-
     def __init__(self):
         self.launcher = AppLauncher()
         self.wayland = WaylandController()
@@ -244,7 +251,7 @@ class AppManager:
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
-            start_new_session=True  # для Unix-систем
+            start_new_session=True,  # для Unix-систем
         )
 
     def maximize_all_windows(self) -> bool:
@@ -273,6 +280,6 @@ class AppManager:
             # Запускаем в фоне
             self.launcher.launch_background(appname, workspace)
             # Не ждём появления окна
-        
+
         # Переключаемся на рабочий стол
         self.wayland.press_super_number(workspace)

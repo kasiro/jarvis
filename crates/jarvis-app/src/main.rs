@@ -27,6 +27,9 @@ mod tray;
 static SHOULD_STOP: AtomicBool = AtomicBool::new(false);
 
 fn main() -> Result<(), String> {
+    // Suppress deprecation warning from libayatana-appindicator
+    std::env::set_var("GTK_DISABLE_DEPRECATION_WARNINGS", "1");
+    
     // Initialize GTK for Linux (required for tray icon)
     #[cfg(target_os = "linux")]
     {

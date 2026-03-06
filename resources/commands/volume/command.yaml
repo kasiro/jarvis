@@ -32,7 +32,7 @@ list:
     action: ahk
     exe_path: ahk/Set sound.exe
     exe_args:
-    - 25
+    - "25"
   voice:
     sounds:
     - ok1
@@ -55,7 +55,7 @@ list:
     action: ahk
     exe_path: ahk/Set sound.exe
     exe_args:
-    - 50
+    - "50"
   voice:
     sounds:
     - ok1
@@ -79,7 +79,7 @@ list:
     action: ahk
     exe_path: ahk/Set sound.exe
     exe_args:
-    - 100
+    - "100"
   voice:
     sounds:
     - ok1
