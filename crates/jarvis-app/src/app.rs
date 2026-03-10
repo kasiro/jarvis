@@ -27,10 +27,12 @@ fn main_loop(text_cmd_rx: Receiver<String>, rt: &tokio::runtime::Runtime) -> Res
     // VAD state
     let mut vad_state = VadState::WaitingForVoice;
     let mut silence_frames: u32 = 0;
-    
+    let mut last_recognized_text: Option<String> = None;
+
     // how many frames of silence before we consider speech ended
-    // 1.5 seconds = 1.5 * (16000 / 512) ≈ 47 frames
-    let silence_threshold: u32 = ((1.5 * sample_rate as f32) / frame_length as f32) as u32;
+    // 0.8 seconds = 0.8 * (16000 / 512) ≈ 25 frames
+    // Reduced for faster command execution
+    let silence_threshold: u32 = ((0.8 * sample_rate as f32) / frame_length as f32) as u32;
     
     voices::play_greet();
 
@@ -82,7 +84,15 @@ fn main_loop(text_cmd_rx: Receiver<String>, rt: &tokio::runtime::Runtime) -> Res
             
             VadState::VoiceActive => {
                 // dual-feed: speech recognizer gets frames in parallel with wake word detector
-                let _ = stt::recognize(&frame_buffer, false);
+                let stt_result = stt::recognize(&frame_buffer, false);
+                if let Some(ref text) = stt_result {
+                    if !text.trim().is_empty() {
+                        info!("STT recognized during VoiceActive: '{}'", text);
+                        // Store the recognized text for later use
+                        // This is critical for no-wake-word commands!
+                        last_recognized_text = Some(text.clone());
+                    }
+                }
 
                 // feed to wake word detector
                 if let Some(_keyword_index) = listener::data_callback(&frame_buffer) {
@@ -122,12 +132,55 @@ fn main_loop(text_cmd_rx: Receiver<String>, rt: &tokio::runtime::Runtime) -> Res
                 } else {
                     silence_frames += 1;
                     
+                    // Log every 50 frames (~1 second) to avoid spam
+                    if silence_frames % 50 == 0 {
+                        let silence_secs = (silence_frames as f32 * frame_length as f32) / sample_rate as f32;
+                        debug!("VAD: Silence for {} frames ({:.1}s)", silence_frames, silence_secs);
+                    }
+
                     if silence_frames > silence_threshold {
+                        // Use the last recognized text (Vosk clears result after silence!)
+                        let final_text = last_recognized_text.take();
+
+                        if let Some(ref text) = final_text {
+                            info!("Final STT result after silence: '{}'", text);
+                        }
+
+                        if let Some(final_text) = final_text {
+                            if !final_text.trim().is_empty() {
+                                // Check if this is a no-wake-word command
+                                let commands_list = match COMMANDS_LIST.get() {
+                                    Some(c) => c,
+                                    None => {
+                                        warn!("Commands not loaded");
+                                        vad_state = VadState::WaitingForVoice;
+                                        silence_frames = 0;
+                                        stt::reset_wake_recognizer();
+                                        stt::reset_speech_recognizer();
+                                        continue 'wake_word;
+                                    }
+                                };
+
+                                if commands::fetch_command_no_wake_word(&final_text.to_lowercase(), commands_list).is_some() {
+                                    // No-wake-word command found - execute it!
+                                    info!("No-wake-word command detected: '{}'", final_text);
+                                    process_text_command(&final_text, &rt);
+                                } else {
+                                    debug!("No matching no-wake-word command found for: '{}'", final_text);
+                                }
+                            } else {
+                                warn!("Final text is empty - VAD false positive or no speech detected");
+                            }
+                        } else {
+                            debug!("No text recognized during VoiceActive");
+                        }
+
                         debug!("VAD: Silence timeout, returning to wait state");
                         vad_state = VadState::WaitingForVoice;
                         silence_frames = 0;
                         stt::reset_wake_recognizer();
                         stt::reset_speech_recognizer(); // reset since we were dual-feeding
+                        last_recognized_text = None; // Reset for next phrase
                     }
                 }
             }
@@ -269,7 +322,37 @@ fn recognize_command(
                     if recognized_voice.is_empty() {
                         continue;
                     }
+
+                    // Check for commands without wake word
+                    // If command has wake_word_required: false, execute immediately without requiring wake word
+                    let commands_list = match COMMANDS_LIST.get() {
+                        Some(c) => c,
+                        None => {
+                            ipc::send(IpcEvent::Error { message: "Commands not loaded".to_string() });
+                            return;
+                        }
+                    };
+
+                    // Try to find command without wake word requirement
+                    let found_no_wake = commands::fetch_command_no_wake_word(&recognized_voice, commands_list).is_some();
                     
+                    if found_no_wake {
+                        // Command without wake word found - execute immediately
+                        info!("No-wake-word command detected: '{}'", recognized_voice);
+                        let should_chain = execute_command(&recognized_voice, rt);
+                        if !should_chain {
+                            return;
+                        }
+                        // Reset for chaining
+                        stt::reset_speech_recognizer();
+                        vad_state = VadState::WaitingForVoice;
+                        silence_frames = 0;
+                        start = SystemTime::now();
+                        audio_buffer.clear();
+                        ipc::send(IpcEvent::Listening);
+                        continue;
+                    }
+
                     // execute command and check if we should chain
                     let should_chain = execute_command(&recognized_voice, rt);
                     
@@ -295,8 +378,17 @@ fn recognize_command(
                     silence_frames = 0;
                 } else {
                     silence_frames += 1;
-                    
+
                     if silence_frames > silence_threshold {
+                        // Before returning, flush STT to get final result
+                        if let Some(final_text) = stt::finish_speech() {
+                            info!("Final STT result after silence: '{}'", final_text);
+                            if !final_text.trim().is_empty() {
+                                // Process the final result
+                                process_text_command(&final_text, rt);
+                            }
+                        }
+                        
                         info!("Long silence detected, returning to wake word mode.");
                         return;
                     }
@@ -317,24 +409,21 @@ fn recognize_command(
 
 fn process_text_command(text: &str, rt: &tokio::runtime::Runtime) {
     info!("Processing text command: {}", text);
-    
+
     ipc::send(IpcEvent::SpeechRecognized { text: text.to_string() });
-    
+
     let mut filtered = text.to_lowercase();
-    // for tbr in config::ASSISTANT_PHRASES_TBR {
-    //     filtered = filtered.replace(tbr, "");
-    // }
     for tbr in config::get_phrases_to_remove(&i18n::get_language()) {
         filtered = filtered.replace(tbr, "");
     }
 
     let filtered = filtered.trim();
-    
+
     if filtered.is_empty() {
         ipc::send(IpcEvent::Idle);
         return;
     }
-    
+
     // text commands never chain
     execute_command(filtered, rt);
 }

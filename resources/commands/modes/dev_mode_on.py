@@ -13,6 +13,7 @@ Dev Mode ON - Включает режим разработчика
 - Быстрый запуск приложений (Zen, Zed)
 - Развёрнутые окна
 """
+
 from jarvis_api import init_jarvis
 
 
@@ -34,12 +35,14 @@ async def execute(context):
     if success:
         jarvis.log("info", "Dev Mode activated successfully")
 
-        # Воспроизводим OK звук
+        # СРАЗУ воспроизводим OK звук (сразу после получения команды!)
         jarvis.audio.play_ok()
 
         # Разворачиваем все окна (для удобной разработки)
         jarvis.log("info", "Maximizing all windows for dev workspace...")
-        jarvis.environment.maximize_all_windows()
+        jarvis.environment.launch_app("firefox", 1)
+        jarvis.environment.launch_app("kgx", 2)
+        jarvis.environment.launch_app("zeditor", 3)
 
         # Показываем уведомление
         # jarvis.system.notify(
@@ -51,9 +54,6 @@ async def execute(context):
     else:
         jarvis.log("error", "Failed to activate Dev Mode")
         jarvis.audio.play_error()
-        jarvis.system.notify(
-            "Error",
-            "Не удалось активировать режим разработчика"
-        )
+        jarvis.system.notify("Error", "Не удалось активировать режим разработчика")
 
         return {"success": False, "error": "Failed to activate Dev Mode"}

@@ -10,7 +10,6 @@ if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
 from jarvis_api import init_jarvis
-from wm_manager import AppManager
 
 
 async def execute(context):
@@ -18,9 +17,7 @@ async def execute(context):
     jarvis = init_jarvis(context)
     jarvis.log("info", "Opening browser...")
 
-    # Используем AppManager для умного запуска (не блокирует)
-    manager = AppManager()
-    manager.launch_or_move_background("firefox", "firefox", 1)
+    jarvis.environment.launch_or_move_app("firefox", "firefox", 1)
 
     jarvis.log("info", "Browser ready")
     return {"success": True}

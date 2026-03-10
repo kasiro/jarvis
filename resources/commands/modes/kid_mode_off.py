@@ -13,9 +13,11 @@ Kid Mode OFF - Выключает детский режим
 - Закрывает YouTube Kids
 - Разворачивает окна обратно
 """
-from jarvis_api import init_jarvis
+
 import sys
 from pathlib import Path
+
+from jarvis_api import init_jarvis
 
 # Добавляем parent directory в path для импорта vpn
 parent_dir = str(Path(__file__).parent.parent)
@@ -42,8 +44,6 @@ async def execute(context):
 
     if success:
         # jarvis.log("info", "Normal mode activated successfully")
-
-        # Воспроизводим OK звук
         jarvis.audio.play_ok()
 
         # 1. Останавливаем VPN через VPNController
@@ -54,11 +54,13 @@ async def execute(context):
 
         # 2. Закрываем Firefox с YouTube Kids
         # jarvis.log("info", "Closing YouTube Kids...")
-        jarvis.system.exec("pkill -f 'firefox.*youtubekids'")
+        jarvis.system.exec("killall mullvad-browser")
 
         # 3. Разворачиваем все окна обратно
         # jarvis.log("info", "Restoring windows...")
         jarvis.environment.maximize_all_windows()
+
+        # Воспроизводим OK звук (после всех действий)
 
         # Показываем уведомление
         # jarvis.system.notify(
@@ -70,9 +72,6 @@ async def execute(context):
     else:
         jarvis.log("error", "Failed to deactivate Kid Mode")
         jarvis.audio.play_error()
-        jarvis.system.notify(
-            "Error",
-            "Не удалось деактивировать детский режим"
-        )
+        jarvis.system.notify("Error", "Не удалось деактивировать детский режим")
 
         return {"success": False, "error": "Failed to deactivate Kid Mode"}

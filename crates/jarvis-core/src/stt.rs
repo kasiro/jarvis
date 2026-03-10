@@ -8,6 +8,7 @@ use crate::config::structs::SpeechToTextEngine;
 pub use self::vosk::init_vosk;
 pub use self::vosk::recognize_wake_word;
 pub use self::vosk::recognize_speech;
+pub use self::vosk::finish_speech;
 pub use self::vosk::reset_speech_recognizer;
 pub use self::vosk::reset_wake_recognizer;
 

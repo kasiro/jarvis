@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Calculator ON - запускает калькулятор или переключается на него"""
+
 import sys
 from pathlib import Path
 
@@ -16,10 +17,10 @@ async def execute(context):
     """Запустить калькулятор или переключиться на него"""
     jarvis = init_jarvis(context)
     jarvis.log("info", "Opening calculator...")
-    
+
     # Используем AppManager для умного запуска (не блокирует)
     manager = AppManager()
-    manager.launch_or_move_background('calculator', 'org.gnome.Calculator', 1)
-    
+    manager.execute_background(["gnome-calculator"])
+
     jarvis.log("info", "Calculator ready")
     return {"success": True}

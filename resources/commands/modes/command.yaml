@@ -3,6 +3,7 @@ list:
   - command:
       action: python
       script: kid_mode_on.py
+      wake_word_required: true
     voice:
       sounds:
         - ok1
@@ -12,6 +13,8 @@ list:
       - детский режим
       - запусти детский режим
       - протокол мультики
+      - включи мультики
+      - включи ребёнку мультики
       - запусти протокол мультики
       - включи детский режим
 
@@ -19,6 +22,7 @@ list:
   - command:
       action: python
       script: kid_mode_off.py
+      wake_word_required: false
     voice:
       sounds:
         - ok1
@@ -34,6 +38,7 @@ list:
   - command:
       action: python
       script: dev_mode_on.py
+      wake_word_required: true
     voice:
       sounds:
         - ok1

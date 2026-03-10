@@ -97,6 +97,29 @@ pub fn reset_speech_recognizer() {
     }
 }
 
+// Finish speech recognition and get final result
+pub fn finish_speech() -> Option<String> {
+    let mut recognizer = SPEECH_RECOGNIZER.get()?.lock();
+    
+    // Get result even if not finalized - Vosk will return last recognized text
+    let result = recognizer.result()
+        .multiple()
+        .and_then(|m| m.alternatives.first().map(|a| a.text.to_string()));
+    
+    // Log for debugging
+    if let Some(ref text) = result {
+        if !text.trim().is_empty() {
+            info!("finish_speech() returned: '{}'", text);
+        } else {
+            debug!("finish_speech() returned empty string");
+        }
+    } else {
+        debug!("finish_speech() returned None");
+    }
+    
+    result
+}
+
 pub fn reset_wake_recognizer() {
     if let Some(recognizer) = WAKE_RECOGNIZER.get() {
         recognizer.lock().reset();

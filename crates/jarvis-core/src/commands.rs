@@ -128,6 +128,7 @@ pub fn parse_commands() -> Result<Vec<JCommandsList>, String> {
                             timeout: 10000,
                             sounds: sounds_map,
                             phrases: phrases_map,
+                            wake_word_required: legacy.command.wake_word_required,  // ✅ Берём из YAML
                             slots: HashMap::new(),
                             sounds_cache: RwLock::new(HashMap::new()),
                             phrases_cache: RwLock::new(HashMap::new()),
@@ -191,6 +192,23 @@ pub fn fetch_command<'a>(
     phrase: &str,
     commands: &'a [JCommandsList],
 ) -> Option<(&'a PathBuf, &'a JCommand)> {
+    fetch_command_internal(phrase, commands, None)
+}
+
+// Fetch command without wake word requirement
+pub fn fetch_command_no_wake_word<'a>(
+    phrase: &str,
+    commands: &'a [JCommandsList],
+) -> Option<(&'a PathBuf, &'a JCommand)> {
+    fetch_command_internal(phrase, commands, Some(false))
+}
+
+// Internal implementation
+fn fetch_command_internal<'a>(
+    phrase: &str,
+    commands: &'a [JCommandsList],
+    wake_word_required: Option<bool>,
+) -> Option<(&'a PathBuf, &'a JCommand)> {
     let lang = i18n::get_language();
 
     let phrase = phrase.trim().to_lowercase();
@@ -206,22 +224,29 @@ pub fn fetch_command<'a>(
 
     for cmd_list in commands {
         for cmd in &cmd_list.commands {
+            // Filter by wake_word_required if specified
+            if let Some(require_wake) = wake_word_required {
+                if cmd.wake_word_required != require_wake {
+                    continue;
+                }
+            }
+
             let cmd_phrases = cmd.get_phrases(&lang);
-            
+
             for cmd_phrase in cmd_phrases.iter() {
                 let cmd_phrase_lower = cmd_phrase.trim().to_lowercase();
                 let cmd_phrase_chars: Vec<char> = cmd_phrase_lower.chars().collect();
-                
+
                 // character-level similarity
                 let char_ratio = ratio(&phrase_chars, &cmd_phrase_chars);
-                
+
                 // word-level similarity
                 let cmd_words: Vec<&str> = cmd_phrase_lower.split_whitespace().collect();
                 let word_score = word_overlap_score(&phrase_words, &cmd_words);
-                
+
                 // combined score
                 let score = (char_ratio * 0.6) + (word_score * 0.4);
-                
+
                 // early exit on perfect match
                 if score >= 99.0 {
                     debug!("Perfect match: '{}' -> '{}'", phrase, cmd_phrase_lower);
@@ -241,7 +266,7 @@ pub fn fetch_command<'a>(
     } else {
         debug!("No match for '{}' (best: {:.1}%)", phrase, best_score);
     }
-    
+
     result
 }
 
@@ -536,7 +561,7 @@ fn execute_python(
 ) -> Result<bool, String> {
     use std::process::{Command, Stdio};
     use std::io::Write;
-    use serde_json::{json, Value};
+    use serde_json::json;
 
     // Get script path
     let script_name = if cmd_config.script.is_empty() {
@@ -598,24 +623,19 @@ fn execute_python(
         stdin.write_all(b"\n")
             .map_err(|e| format!("Failed to send newline: {}", e))?;
     }
-
-    // Read response
-    let output = child.wait_with_output()
-        .map_err(|e| format!("Failed to read output: {}", e))?;
-
-    // Parse response
-    let response: Value = serde_json::from_slice(&output.stdout)
-        .map_err(|e| format!("Failed to parse response: {}", e))?;
-
-    // Check result
-    let success = response.get("success").and_then(|v| v.as_bool()).unwrap_or(false);
     
-    if !success {
-        let error = response.get("error").and_then(|v| v.as_str()).unwrap_or("Unknown error");
-        error!("Python script error: {}", error);
-        return Err(format!("Python script error: {}", error));
+    // Close stdin to signal EOF (Python will process and exit)
+    // Берём stdin владением и дропаем
+    if let Some(_stdin) = child.stdin.take() {
+        drop(_stdin);
     }
 
-    info!("Python script executed successfully");
+    // НЕ ждём завершения Python! 
+    // Python работает в фоне, звук воспроизводится сразу
+    // Детачим процесс чтобы он продолжил выполняться независимо
+    use std::mem;
+    mem::forget(child);
+
+    info!("Python script started (running in background)");
     Ok(true)
 }

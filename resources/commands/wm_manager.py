@@ -101,6 +101,39 @@ class WindowManager:
                 success = False
         return success
 
+    def _minimize_window(self, wm_class: str) -> bool:
+        windows = self.get_windows()
+        success = True
+        for w in windows:
+            try:
+                if w["wm_class"] == wm_class:
+                    self._call("Minimize", str(w["id"]))
+            except:
+                success = False
+        return success
+
+    def _maximize_window(self, wm_class: str) -> bool:
+        windows = self.get_windows()
+        success = True
+        for w in windows:
+            try:
+                if w["wm_class"] == wm_class:
+                    self._call("Maximize", str(w["id"]))
+            except:
+                success = False
+        return success
+
+    def _focus_window(self, wm_class: str) -> bool:
+        windows = self.get_windows()
+        success = True
+        for w in windows:
+            try:
+                if w["wm_class"] == wm_class:
+                    self._call("Activate", str(w["id"]))
+            except:
+                success = False
+        return success
+
     def is_running(self, wm_class: str):
         windows = self.get_windows()
         wm_list = [wm["wm_class"] for wm in windows]
@@ -157,12 +190,6 @@ class AppLauncher:
     # wm_class берётся из D-Bus: gdbus call --session --dest org.gnome.Shell \
     #   --object-path /org/gnome/Shell/Extensions/Windows \
     #   --method org.gnome.Shell.Extensions.Windows.List
-    APP_MAP = {
-        "zen-browser": {"cmd": ["zen-browser"], "class": "zen"},
-        "firefox": {"cmd": ["firefox"], "class": "firefox"},
-        "zed": {"cmd": ["zed"], "class": "dev.zed.Zed"},
-        "calculator": {"cmd": ["gnome-calculator"], "class": "org.gnome.Calculator"},
-    }
 
     def __init__(self):
         self.wm = WindowManager()
@@ -175,11 +202,7 @@ class AppLauncher:
         """
         workspace = workspace - 1
 
-        app_info = self.APP_MAP.get(app_name.lower())
-        if not app_info:
-            return f"❌ Неизвестное приложение: {app_name}. Доступны: {', '.join(self.APP_MAP.keys())}"
-
-        cmd = app_info["cmd"]
+        cmd = app_name
 
         try:
             # Получаем список окон ДО запуска
@@ -212,11 +235,7 @@ class AppLauncher:
         """
         workspace = workspace - 1
 
-        app_info = self.APP_MAP.get(app_name.lower())
-        if not app_info:
-            return f"❌ Неизвестное приложение: {app_name}. Доступны: {', '.join(self.APP_MAP.keys())}"
-
-        cmd = app_info["cmd"]
+        cmd = app_name
 
         try:
             # Запускаем приложение в фоне
@@ -254,6 +273,24 @@ class AppManager:
             start_new_session=True,  # для Unix-систем
         )
 
+    def launch_command_background(self, cmd: list[str]):
+        """
+        Запускает команду напрямую в фоне (без APP_MAP).
+        cmd: список аргументов команды, например ["zed"] или ["firefox", "--new-window"]
+        """
+        try:
+            Popen(
+                cmd,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True,
+            )
+            return f"✅ Команда запущена: {' '.join(cmd)}"
+        except Exception as e:
+            logger.exception("Ошибка в launch_command_background")
+            return f"❌ Ошибка: {str(e)}"
+
     def maximize_all_windows(self) -> bool:
         return self.windowManager._maximize_all_manually()
 
@@ -279,7 +316,6 @@ class AppManager:
         if not self.windowManager.is_running(wm_class):
             # Запускаем в фоне
             self.launcher.launch_background(appname, workspace)
-            # Не ждём появления окна
 
         # Переключаемся на рабочий стол
         self.wayland.press_super_number(workspace)

@@ -3,9 +3,9 @@ id = "weather"
 type = "python"
 script = "weather.py"
 timeout = 10000
+wake_word_required = false
 
 sounds.ru = ["ok1", "ok2", "ok3"]
-sounds.en = ["ok1", "ok2", "ok3"]
 
 phrases.ru = [
     "какая погода в {city}",
@@ -20,11 +20,10 @@ phrases.ru = [
     "погода сегодня",
     "что с погодой",
 ]
-phrases.en = ["what's the weather in {city}", "weather in {city}"]
 
 [commands.slots.city]
 entity = "city name"
-context = ["in", "for", "at", "в", "для"]
+context = ["в", "для"]
 
 
 [[commands]]

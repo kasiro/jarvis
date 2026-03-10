@@ -2,6 +2,11 @@ use std::{collections::HashMap, path::PathBuf, sync::Arc};
 use serde::{Serialize, Deserialize};
 use parking_lot::RwLock;
 
+// Helper function for default true value
+fn default_true() -> bool {
+    true
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct JCommandsList {
     #[serde(skip)]
@@ -34,6 +39,8 @@ pub struct LegacyCommandData {
     pub cli_args: Vec<String>,
     #[serde(default)]
     pub script: String,
+    #[serde(default = "default_true")]
+    pub wake_word_required: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -91,6 +98,10 @@ pub struct JCommand {
     #[serde(default)]
     pub phrases: HashMap<String, Vec<String>>,
 
+    // Wake word requirement: if false, command executes without wake word
+    #[serde(default = "default_true")]
+    pub wake_word_required: bool,
+
     // Slot definitions: slot_name -> how to extract it
     #[serde(default)]
     pub slots: HashMap<String, SlotDefinition>,
@@ -119,6 +130,7 @@ impl Default for JCommand {
             timeout: 10000,
             sounds: HashMap::new(),
             phrases: HashMap::new(),
+            wake_word_required: true,  // Default: wake word required
             slots: HashMap::new(),
             sounds_cache: RwLock::new(HashMap::new()),
             phrases_cache: RwLock::new(HashMap::new()),
@@ -148,6 +160,7 @@ impl Clone for JCommand {
 
             sounds: self.sounds.clone(),
             phrases: self.phrases.clone(),
+            wake_word_required: self.wake_word_required.clone(),
 
             slots: self.slots.clone(),
 

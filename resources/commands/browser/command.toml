@@ -2,9 +2,8 @@
 id = "browser_open"
 type = "python"
 script = "sh/open_browser.py"
+wake_word_required = true
 sounds.ru = ["ok1", "ok2", "ok3", "ok4"]
-sounds.en = ["ok1", "ok2", "ok3"]
-sounds.ua = ["ok1", "ok2", "ok3", "ok4", "ok5", "ok6"]
 
 phrases.ru = [
     "открой браузер",
@@ -13,23 +12,41 @@ phrases.ru = [
     "браузер открой",
     "нужен браузер",
 ]
-phrases.en = [
-    "open browser",
-    "launch browser",
-    "start browser",
-    "i need browser",
+
+[[commands]]
+id = "vpn_run"
+type = "python"
+script = "sh/vpn_connect.py"
+wake_word_required = true
+sounds.ru = ["ok1", "ok2", "ok3", "ok4"]
+phrases.ru = [
+    "запусти vpn",
+    "включи vpn",
+    "запусти впн",
+    "включи впн",
+    "подключись к впн",
+    "подключись к vpn"
 ]
-phrases.ua = [
-    "відкрий браузер",
-    "запусти браузер",
-    "увімкни браузер",
-    "потрібен браузер",
+
+[[commands]]
+id = "vpn_run"
+type = "python"
+script = "sh/vpn_disconnect.py"
+wake_word_required = true
+sounds.ru = ["ok1", "ok2", "ok3", "ok4"]
+phrases.ru = [
+    "убей vpn",
+    "отключи vpn",
+    "убей впн",
+    "отключи впн"
 ]
+
 
 [[commands]]
 id = "open_ide"
 type = "python"
 script = "sh/open_ide.py"
+wake_word_required = true
 sounds.ru = ["ok1", "ok2", "ok3", "ok4"]
 phrases.ru = [
     "открой редактор кода",
@@ -46,6 +63,7 @@ phrases.ru = [
 id = "close_ide"
 type = "python"
 script = "sh/close_ide.py"
+wake_word_required = false
 sounds.ru = ["ok1", "ok2", "ok3", "ok4"]
 phrases.ru = [
     "закрой редактор кода",
@@ -54,24 +72,13 @@ phrases.ru = [
     "выключи редактор"
 ]
 
-[[commands]]
-id = "open_web_search"
-type = "cli"
-cli_cmd = "xdg-open https://ya.ru"
-sounds.ru = ["ok1", "ok2", "ok3", "ok4"]
-phrases.ru = [
-    "открой поиск",
-    "запусти поиск",
-    "включи поиск"
-]
 
 [[commands]]
 id = "browser_close"
 type = "python"
 script = "sh/browser_close.py"
+wake_word_required = false
 sounds.ru = ["ok1", "ok2", "ok3", "ok4"]
-sounds.en = ["ok1", "ok2", "ok3"]
-sounds.ua = ["ok1", "ok2", "ok3", "ok4", "ok5", "ok6"]
 phrases.ru = [
     "закрой браузер",
     "закрой все браузеры",

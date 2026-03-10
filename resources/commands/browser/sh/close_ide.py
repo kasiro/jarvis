@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """IDE closer - закрывает редактор кода (Zed)"""
+
 import sys
 from pathlib import Path
 
@@ -17,6 +18,6 @@ async def execute(context):
     # jarvis.log("info", "Closing IDE...")
 
     # Закрываем Zed через exec_background
-    jarvis.system.exec_background('killall zed')
+    jarvis.system.exec_background("killall zed-editor")
 
     return {"success": True}

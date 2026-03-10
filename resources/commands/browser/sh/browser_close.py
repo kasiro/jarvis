@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Browser closer - закрывает браузер (Zen)"""
+
 import sys
 from pathlib import Path
 
@@ -17,6 +18,6 @@ async def execute(context):
     # jarvis.log("info", "Closing browser...")
 
     # Закрываем Zen браузер через exec_background
-    jarvis.system.exec_background('killall zen-bin')
+    jarvis.system.exec_background("killall firefox")
 
     return {"success": True}

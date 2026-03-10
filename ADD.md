@@ -1,5 +1,36 @@
 # ➕ ADD.md - Список функций для реализации (TODO)
 
+## ✅ Реализованные функции
+
+### [x] Команды без Wake Word
+
+**Статус:** ✅ Завершено
+
+**Описание:**
+Добавлена поддержка команд которые работают **без wake word** фразы.
+
+**Файлы:**
+- `crates/jarvis-core/src/commands/structs.rs` - поле `wake_word_required`
+- `crates/jarvis-core/src/commands.rs` - `fetch_command_no_wake_word()`
+- `crates/jarvis-app/src/app.rs` - проверка в `recognize_command()`
+- `resources/commands/WAKE_WORD.md` - документация
+
+**Команды без wake word:**
+- `terminate` (выключись, вырубись...)
+- `browser_open` (открой браузер...)
+- `calc_on` (включи калькулятор...)
+- `calc_off` (закрой калькулятор...)
+- `weather` (какая погода...)
+
+**Использование:**
+```toml
+[[commands]]
+id = "my_command"
+wake_word_required = false  # Работает без wake word
+```
+
+---
+
 ## 🎯 Приоритетные задачи
 
 ### 0. 🔍 ПРОВЕРКА ВСЕХ КОМАНД (ПЕРВАЯ ЗАДАЧА!)
