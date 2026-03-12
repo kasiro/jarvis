@@ -2,7 +2,7 @@ list:
   # Kid Mode ON
   - command:
       action: python
-      script: kid_mode_on.py
+      script: kid_mode_on_pyd.py
       wake_word_required: true
     voice:
       sounds:
@@ -21,7 +21,7 @@ list:
   # Kid Mode OFF
   - command:
       action: python
-      script: kid_mode_off.py
+      script: kid_mode_off_pyd.py
       wake_word_required: false
     voice:
       sounds:

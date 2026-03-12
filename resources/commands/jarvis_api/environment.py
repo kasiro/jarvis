@@ -249,6 +249,24 @@ class Environment:
 
     # ===== Application Launching =====
 
+    def gtk_launch_app(self, app_name: str, workspace: int = 1):
+        """
+        Запустить приложение на указанном рабочем столе
+
+        Args:
+            app_name: Имя приложения (zen-browser, zed)
+            workspace: Номер рабочего стола (1-based)
+
+        Returns:
+            Сообщение о результате
+        """
+        app_mgr = self._init_app_manager()
+        if not app_mgr:
+            return "❌ AppManager не доступен"
+
+        launcher = app_mgr.launcher
+        return launcher.gtk_launch(app_name, workspace)
+
     def launch_app(self, app_name: str, workspace: int = 1) -> str:
         """
         Запустить приложение на указанном рабочем столе

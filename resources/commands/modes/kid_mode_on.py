@@ -29,6 +29,7 @@ from vpn import VPNController
 
 
 def setup(jarvis, delay):
+    """пропускает настройки при запуске"""
     sleep(18)
 
     # Настойка
@@ -45,9 +46,12 @@ def setup(jarvis, delay):
 
     sleep(delay)
 
+    # ввести 2003
     for num in [2, 0, 0, 3]:
         jarvis.environment.press_number(num)
     jarvis.environment.press_enter()
+
+    # выбирает и нажимает кнопки
     sleep(delay)
     jarvis.environment.press_space()
     jarvis.environment.press_tab(6)
@@ -119,7 +123,7 @@ async def execute(context):
         while True:
             is_run = jarvis.environment.is_app_running("WebApp-youtubekids8701")
             if is_run:
-                jarvis.environment.focus_window("WebApp-youtubekids8701")
+                # jarvis.environment.focus_window("WebApp-youtubekids8701")
                 # jarvis.environment.maximize_window("WebApp-youtubekids8701")
                 break
             sleep(interval)
@@ -129,20 +133,23 @@ async def execute(context):
                 break
 
         # setup(jarvis, delay)
-        sleep(6)
+        sleep(3)
 
+        # вводит текст
         sleep(delay)
         jarvis.environment.press_tab(3)
         jarvis.environment.type_text("синий трактор")
         jarvis.environment.press_enter()
 
+        # включает первое видео
         sleep(delay)
         jarvis.environment.press_tab()
         sleep(delay)
         jarvis.environment.press_enter()
 
+        # разворачивает видео на весь экран
         sleep(delay)
-        jarvis.environment.press_tab(7)
+        jarvis.environment.press_tab(7, delay=0.2)
         sleep(delay)
         jarvis.environment.press_enter()
 

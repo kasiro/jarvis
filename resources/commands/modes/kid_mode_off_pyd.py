@@ -54,8 +54,8 @@ async def execute(context):
 
         # 2. Закрываем Firefox с YouTube Kids
         # jarvis.log("info", "Closing YouTube Kids...")
-        jarvis.system.exec("killall WebApp-youtubekids8701")
-        # jarvis.system.exec("pkill -f .cache/ms-playwright/firefox")
+        # jarvis.system.exec("killall WebApp-youtubekids8701")
+        jarvis.system.exec("pkill -f .cache/ms-playwright/firefox")
 
         # 3. Разворачиваем все окна обратно
         # jarvis.log("info", "Restoring windows...")

@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "aiohttp>=3.13.3",
+    "playwright>=1.58.0",
     "pyautogui>=0.9.54",
     "python-ydotool>=1.1.0",
 ]

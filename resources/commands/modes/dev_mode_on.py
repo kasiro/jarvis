@@ -41,8 +41,9 @@ async def execute(context):
         # Разворачиваем все окна (для удобной разработки)
         jarvis.log("info", "Maximizing all windows for dev workspace...")
         jarvis.environment.launch_app("firefox", 1)
-        jarvis.environment.launch_app("kgx", 2)
+        jarvis.environment.launch_app("kgx --working-directory '/home/kasiro/'", 2)
         jarvis.environment.launch_app("zeditor", 3)
+        # jarvis.environment.gtk_launch_app('')
 
         # Показываем уведомление
         # jarvis.system.notify(

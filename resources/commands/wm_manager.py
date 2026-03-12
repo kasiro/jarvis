@@ -227,6 +227,78 @@ class AppLauncher:
             logger.exception("Ошибка в launch")
             return f"❌ Ошибка: {str(e)}"
 
+    def gtk_launch(self, app_name: str, workspace: int, **kwargs) -> str:
+        """
+        Запускает приложение на указанном рабочем столе (блокирует).
+        app_name: имя приложения (из APP_MAP)
+        workspace: номер рабочего стола (0,1,2...)
+        """
+        workspace = workspace - 1
+
+        cmd = app_name
+
+        try:
+            # Получаем список окон ДО запуска
+            before_windows = self.wm.get_windows()
+            before_ids = {w["id"] for w in before_windows}
+
+            # Запускаем приложение
+            subprocess.Popen(["gtk-launch", cmd])
+
+            # Ждём появления нового окна
+            new_id = self.wm.wait_for_new_window(before_ids, timeout=15)
+            if new_id is None:
+                return f"❌ Не удалось найти окно для {app_name} после запуска."
+
+            # Перемещаем на целевой рабочий стол
+            if self.wm.move_to_workspace(new_id, workspace):
+                display_workspace = workspace + 1
+                return f"✅ {app_name.capitalize()} запущен на рабочем столе {display_workspace}"
+            else:
+                return f"❌ Не удалось переместить окно {app_name}."
+        except Exception as e:
+            logger.exception("Ошибка в launch")
+            return f"❌ Ошибка: {str(e)}"
+
+    def gtk_launch_background(self, app_name: str, workspace: int, **kwargs) -> str:
+        """
+        Запускает приложение на указанном рабочем столе (блокирует).
+        app_name: имя приложения (из APP_MAP)
+        workspace: номер рабочего стола (0,1,2...)
+        """
+        workspace = workspace - 1
+
+        cmd = app_name
+
+        try:
+            # Получаем список окон ДО запуска
+            before_windows = self.wm.get_windows()
+            before_ids = {w["id"] for w in before_windows}
+
+            # Запускаем gtk приложение
+            subprocess.Popen(
+                f"gtk-launch {cmd}",
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True,
+            )
+
+            # Ждём появления нового окна
+            new_id = self.wm.wait_for_new_window(before_ids, timeout=15)
+            if new_id is None:
+                return f"❌ Не удалось найти окно для {app_name} после запуска."
+
+            # Перемещаем на целевой рабочий стол
+            if self.wm.move_to_workspace(new_id, workspace):
+                display_workspace = workspace + 1
+                return f"✅ {app_name.capitalize()} запущен на рабочем столе {display_workspace}"
+            else:
+                return f"❌ Не удалось переместить окно {app_name}."
+        except Exception as e:
+            logger.exception("Ошибка в launch")
+            return f"❌ Ошибка: {str(e)}"
+
     def launch_background(self, app_name: str, workspace: int, **kwargs) -> str:
         """
         Запускает приложение в фоне (не блокирует).
