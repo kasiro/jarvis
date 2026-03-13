@@ -301,6 +301,24 @@ class Environment:
         app_mgr.launch_or_move(app_name, wm_class, workspace)
         return True
 
+    def launch_or_move_app_background(
+        self, app_name: str, wm_class: str, workspace: int
+    ):
+        """
+        Запустить приложение или переключиться на него
+
+        Args:
+            app_name: Имя приложения
+            wm_class: WM класс приложения
+            workspace: Номер рабочего стола
+        """
+        app_mgr = self._init_app_manager()
+        if not app_mgr:
+            return False
+
+        app_mgr.launch_or_move_background(app_name, wm_class, workspace)
+        return True
+
     # ===== Workspace Control =====
 
     def switch_to_workspace(self, number: int) -> bool:

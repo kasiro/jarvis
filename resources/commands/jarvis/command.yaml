@@ -1,7 +1,7 @@
 list:
   - command:
-      action: python
-      script: reboot.py
+      action: cli
+      cli_cmd: "doas systemctl reboot"
       wake_word_required: true
     voice:
       sounds:
@@ -9,9 +9,22 @@ list:
         - ok2
         - ok3
     phrases:
-      - перезагрузись
-      - перезагрузи себя
+      - перезагрузи копьютер
+      - перезагрузи комп
       - выполни перезагрузку
+
+  - command:
+      action: cli
+      cli_cmd: "doas systemctl poweroff"
+      wake_word_required: true
+    voice:
+      sounds:
+        - ok1
+        - ok2
+        - ok3
+    phrases:
+      - выключи копьютер
+      - выключи комп
 
   - command:
       action: voice

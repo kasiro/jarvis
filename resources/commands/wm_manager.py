@@ -1,6 +1,7 @@
 import ast
 import json
 import logging
+import shlex
 import subprocess
 import sys
 import time
@@ -194,7 +195,7 @@ class AppLauncher:
     def __init__(self):
         self.wm = WindowManager()
 
-    def launch(self, app_name: str, workspace: int, **kwargs) -> str:
+    def launch(self, app_name: str, workspace: int) -> str:
         """
         Запускает приложение на указанном рабочем столе (блокирует).
         app_name: имя приложения (из APP_MAP)
@@ -202,7 +203,7 @@ class AppLauncher:
         """
         workspace = workspace - 1
 
-        cmd = app_name
+        cmd = shlex.split(app_name)
 
         try:
             # Получаем список окон ДО запуска
@@ -227,7 +228,7 @@ class AppLauncher:
             logger.exception("Ошибка в launch")
             return f"❌ Ошибка: {str(e)}"
 
-    def gtk_launch(self, app_name: str, workspace: int, **kwargs) -> str:
+    def gtk_launch(self, app_name: str, workspace: int) -> str:
         """
         Запускает приложение на указанном рабочем столе (блокирует).
         app_name: имя приложения (из APP_MAP)
@@ -260,7 +261,7 @@ class AppLauncher:
             logger.exception("Ошибка в launch")
             return f"❌ Ошибка: {str(e)}"
 
-    def gtk_launch_background(self, app_name: str, workspace: int, **kwargs) -> str:
+    def gtk_launch_background(self, app_name: str, workspace: int) -> str:
         """
         Запускает приложение на указанном рабочем столе (блокирует).
         app_name: имя приложения (из APP_MAP)
@@ -299,7 +300,7 @@ class AppLauncher:
             logger.exception("Ошибка в launch")
             return f"❌ Ошибка: {str(e)}"
 
-    def launch_background(self, app_name: str, workspace: int, **kwargs) -> str:
+    def launch_background(self, app_name: str, workspace: int) -> str:
         """
         Запускает приложение в фоне (не блокирует).
         app_name: имя приложения (из APP_MAP)
@@ -307,7 +308,7 @@ class AppLauncher:
         """
         workspace = workspace - 1
 
-        cmd = app_name
+        cmd = shlex.split(app_name)
 
         try:
             # Запускаем приложение в фоне
