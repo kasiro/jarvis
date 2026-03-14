@@ -66,7 +66,7 @@ pub fn init_dirs() -> Result<(), String> {
 */
 pub const DEFAULT_AUDIO_TYPE: AudioType = AudioType::Kira;
 pub const DEFAULT_RECORDER_TYPE: RecorderType = RecorderType::PvRecorder;
-pub const DEFAULT_WAKE_WORD_ENGINE: WakeWordEngine = WakeWordEngine::Vosk;
+pub const DEFAULT_WAKE_WORD_ENGINE: WakeWordEngine = WakeWordEngine::Rustpotter;
 pub const DEFAULT_SPEECH_TO_TEXT_ENGINE: SpeechToTextEngine = SpeechToTextEngine::Vosk;
 
 // backend defaults (string IDs)
@@ -97,7 +97,7 @@ pub const TRAY_ICON: &str = "32x32.png";
 pub const TRAY_TOOLTIP: &str = "Jarvis Voice Assistant";
 
 // RUSPOTTER
-pub const RUSPOTTER_MIN_SCORE: f32 = 0.62;
+pub const RUSPOTTER_MIN_SCORE: f32 = 0.35;
 
 #[cfg(all(feature="jarvis_app", feature = "rustpotter_wake"))]
 pub const RUSTPOTTER_DEFAULT_CONFIG: Lazy<RustpotterConfig> = Lazy::new(|| {
@@ -105,22 +105,16 @@ pub const RUSTPOTTER_DEFAULT_CONFIG: Lazy<RustpotterConfig> = Lazy::new(|| {
         fmt: AudioFmt::default(),
         detector: DetectorConfig {
             avg_threshold: 0.,
-            threshold: 0.5,
-            min_scores: 15,
+            threshold: 0.3,  // Lowered for better sensitivity
+            min_scores: 5,   // Lowered for faster detection (was 15)
             score_ref: 0.22,
             band_size: 5,
             vad_mode: None,
             score_mode: ScoreMode::Max,
             eager: false,
-            // comparator_band_size: 5,
-            // comparator_ref: 0.22
         },
         filters: FiltersConfig {
             gain_normalizer: GainNormalizationConfig {
-                // enabled: true,
-                // gain_ref: None,
-                // min_gain: 0.7,
-                // max_gain: 1.0,
                 enabled: false, // disable, now we have separate gain normalizer implementation
                 gain_ref: None,
                 min_gain: 0.7,

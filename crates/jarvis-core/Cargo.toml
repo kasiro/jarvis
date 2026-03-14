@@ -57,7 +57,7 @@ regex = { workspace = true, optional = true }
 winrt-notification = { workspace = true, optional = true }
 
 [features]
-default = ["jarvis_app"]
+default = ["jarvis_app", "rustpotter_wake"]
 jarvis_app = [
     "vosk", "intent-classifier", "fastembed", "tokio", "nnnoiseless", "tokio-tungstenite", "futures-util",
     "lua", "python",

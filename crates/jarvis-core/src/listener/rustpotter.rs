@@ -15,27 +15,27 @@ pub fn init() -> Result<(), ()> {
     match Rustpotter::new(&rustpotter_config) {
         Ok(mut rinstance) => {
             // success
-            // wake word files list
-            // @TODO. Make it configurable via GUI for custom user voice.
-            let rustpotter_wake_word_files: [&str; 1] = [
+            // wake word files list - load ALL available wake words for better detection
+            let rustpotter_wake_word_files: [&str; 6] = [
                 "resources/rustpotter/jarvis-default.rpw",
-                // "rustpotter/jarvis-community-1.rpw",
-                // "rustpotter/jarvis-community-2.rpw",
-                // "rustpotter/jarvis-community-3.rpw",
-                // "rustpotter/jarvis-community-4.rpw",
-                // "rustpotter/jarvis-community-5.rpw",
+                "resources/rustpotter/jarvis-community-1.rpw",
+                "resources/rustpotter/jarvis-community-2.rpw",
+                "resources/rustpotter/jarvis-community-3.rpw",
+                "resources/rustpotter/jarvis-community-4.rpw",
+                "resources/rustpotter/jarvis-community-5.rpw",
             ];
 
             // load wake word files
             for rpw in rustpotter_wake_word_files {
-                // @TODO: Change wakeword key to something else?
-                if let Err(e) = rinstance.add_wakeword_from_file(rpw, rpw) {
-                    error!("Failed to load wakeword file '{}': {}", rpw, e);
+                match rinstance.add_wakeword_from_file(rpw, rpw) {
+                    Ok(_) => info!("🥒 Rustpotter: Loaded wake word '{}'", rpw),
+                    Err(e) => error!("Failed to load wakeword file '{}': {}", rpw, e),
                 }
             }
 
             // store
             let _ = RUSTPOTTER.set(Mutex::new(rinstance));
+            info!("🥒 Rustpotter initialized with {} wake word(s)", rustpotter_wake_word_files.len());
         }
         Err(msg) => {
             error!("Rustpotter failed to initialize.\nError details: {}", msg);
@@ -53,15 +53,20 @@ pub fn data_callback(frame_buffer: &[i16]) -> Option<i32> {
     // let detection = rustpotter.process_samples(frame_buffer.to_vec()); // @TODO. Temp crutch. Fix optimization issue, frame_buffer should not be copied to a new vector!
     let detection = rustpotter.process_samples(frame_buffer);
 
-    // info!("Ruspotter data callback");
+    debug!("🥒 Rustpotter data_callback: frame_size={}", frame_buffer.len());
 
     if let Some(detection) = detection {
+        // Always log detection for debugging
+        debug!("Rustpotter score: {:.3} (threshold: {:.3})", detection.score, config::RUSPOTTER_MIN_SCORE);
+
         if detection.score > config::RUSPOTTER_MIN_SCORE {
+            info!("🥒 Rustpotter WAKE WORD DETECTED! Score: {:.3}", detection.score);
             info!("Rustpotter detection info:\n{:?}", detection);
 
             return Some(0);
         } else {
-            info!("Rustpotter detection info:\n{:?}", detection)
+            // Log low scores for debugging
+            debug!("Rustpotter: score too low {:.3} < {:.3}", detection.score, config::RUSPOTTER_MIN_SCORE);
         }
     }
 

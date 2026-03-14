@@ -14,7 +14,7 @@ phrases.ru = [
 ]
 
 [[commands]]
-id = "browser_open"
+id = "open_yandex_map"
 type = "python"
 script = "sh/open_yandex_map.py"
 wake_word_required = false

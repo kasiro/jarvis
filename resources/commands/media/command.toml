@@ -1,5 +1,5 @@
 [[commands]]
-id = "pause sound"
+id = "pause_sound"
 type = "cli"
 cli_cmd = "playerctl --all-players play-pause"
 wake_word_required = false

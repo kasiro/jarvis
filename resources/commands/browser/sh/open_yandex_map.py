@@ -15,7 +15,7 @@ async def execute(context):
     jarvis = init_jarvis(context)
     jarvis.log("info", "Opening site [https://yandex.ru/maps/65/novosibirsk/]...")
 
-    jarvis.system.exec("xdg-open", ["https://yandex.ru/maps/65/novosibirsk/"])
+    jarvis.system.open("https://yandex.ru/maps/65/novosibirsk/")
     jarvis.environment.press_super_number(1)
 
     jarvis.log("info", "site is ready")

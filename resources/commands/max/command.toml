@@ -1,0 +1,14 @@
+[[commands]]
+id = "open_max"
+type = "python"
+script = "open_max.py"
+wake_word_required = true
+sounds.ru = ["ok1", "ok2", "ok3", "ok4"]
+
+phrases.ru = [
+    "открой макс",
+    "запусти макс",
+    "включи макс",
+    "макс открой",
+    "нужен макс",
+]

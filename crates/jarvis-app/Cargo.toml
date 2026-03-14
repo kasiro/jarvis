@@ -8,7 +8,7 @@ edition.workspace = true
 build = "build.rs"
 
 [dependencies]
-jarvis-core = { path = "../jarvis-core", features = ["intent"] }
+jarvis-core = { path = "../jarvis-core", features = ["intent", "rustpotter_wake"] }
 once_cell.workspace = true
 log.workspace = true
 simple-log = "2.4"
