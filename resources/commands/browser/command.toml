@@ -2,7 +2,7 @@
 id = "browser_open"
 type = "python"
 script = "sh/open_browser.py"
-wake_word_required = true
+wake_word_required = false
 sounds.ru = ["ok1", "ok2", "ok3", "ok4"]
 
 phrases.ru = [
@@ -17,7 +17,7 @@ phrases.ru = [
 id = "browser_open"
 type = "python"
 script = "sh/open_yandex_map.py"
-wake_word_required = true
+wake_word_required = false
 sounds.ru = ["ok1", "ok2", "ok3", "ok4"]
 
 phrases.ru = [
@@ -27,77 +27,26 @@ phrases.ru = [
 ]
 
 [[commands]]
-id = "browser_console"
+id = "open_wildberries"
 type = "python"
-script = "sh/open_console.py"
-wake_word_required = true
-sounds.ru = ["ok1", "ok2", "ok3", "ok4"]
-
-phrases.ru = [
-    "открой консоль",
-    "запусти консоль",
-    "включи консоль",
-]
-
-[[commands]]
-id = "vpn_run"
-type = "python"
-script = "sh/vpn_connect.py"
-wake_word_required = true
-sounds.ru = ["ok1", "ok2", "ok3", "ok4"]
-phrases.ru = [
-    "запусти vpn",
-    "включи vpn",
-    "запусти впн",
-    "включи впн",
-    "подключись к впн",
-    "подключись к vpn"
-]
-
-[[commands]]
-id = "vpn_run"
-type = "python"
-script = "sh/vpn_disconnect.py"
-wake_word_required = true
-sounds.ru = ["ok1", "ok2", "ok3", "ok4"]
-phrases.ru = [
-    "убей vpn",
-    "отключи vpn",
-    "убей впн",
-    "отключи впн"
-]
-
-
-[[commands]]
-id = "open_ide"
-type = "python"
-script = "sh/open_ide.py"
-wake_word_required = true
-sounds.ru = ["ok1", "ok2", "ok3", "ok4"]
-phrases.ru = [
-    "открой редактор кода",
-    "запусти редактор кода",
-    "включи редактор кода",
-    "редактор кода открой",
-    "нужен редактор кода",
-    "открой редактор",
-    "запусти редактор",
-    "включи редактор",
-]
-
-[[commands]]
-id = "close_ide"
-type = "python"
-script = "sh/close_ide.py"
+script = "sh/open_wildberries.py"
 wake_word_required = false
 sounds.ru = ["ok1", "ok2", "ok3", "ok4"]
-phrases.ru = [
-    "закрой редактор кода",
-    "выключи редактор кода",
-    "закрой редактор",
-    "выключи редактор"
-]
 
+phrases.ru = [
+    "открой вб",
+    "запусти вб",
+    "открой вы бы",
+    "запусти вы бы",
+    "открой вэб",
+    "запусти вэб",
+    "открой маркетплейс",
+    "запусти маркетплейс",
+    "открой маркет плейс",
+    "запусти маркет плейс",
+    "открой маркет",
+    "запусти маркет",
+]
 
 [[commands]]
 id = "browser_close"

@@ -22,21 +22,6 @@ async def execute(context):
         "kgx --working-directory '/home/kasiro/'", "org.gnome.Console", 2
     )
 
-    # timeout = 5
-    # t = 0
-    # while True:
-    #     running = jarvis.environment.is_app_running("org.gnome.Console")
-    #     if running:
-    #         # jarvis.environment.maximize_window("org.gnome.Console")
-    #         jarvis.environment.press_super_number(2)
-    #         break
-
-    #     if t >= timeout:
-    #         break
-
-    #     sleep(1)
-    #     t += 1
-
     # jarvis.system.notify("jarvis", "Консоль запущена")
 
     jarvis.log("info", "console is ready")
