@@ -115,16 +115,16 @@ async def run_browser():
         'document.querySelector(".openedChat .content.scrollListContent .item:last-child .button[aria-label="Принять"]").click()'
     )
 
-    await asyncio.sleep(1)
+    await asyncio.sleep(1.5)
     await send_message(page, "Записаться на приём")
 
-    await asyncio.sleep(1)
+    await asyncio.sleep(1.5)
     await send_message(page, doctor)
 
-    await asyncio.sleep(1)
+    await asyncio.sleep(1.5)
     await send_message(page, full_name)
 
-    await asyncio.sleep(1)
+    await asyncio.sleep(1.5)
     await send_message(page, birdh)
 
     await asyncio.sleep(2)

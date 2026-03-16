@@ -38,6 +38,9 @@ async def execute(context):
         # СРАЗУ воспроизводим OK звук (сразу после получения команды!)
         jarvis.audio.play_ok()
 
+        # FIX: при запуске kgx запускается вместе с активированым venv
+        # FIX: долго запускает zeditor и запускает на текущем раб столе а надо на указанном
+
         # Разворачиваем все окна (для удобной разработки)
         jarvis.log("info", "Maximizing all windows for dev workspace...")
         jarvis.environment.launch_app("firefox", 1)
