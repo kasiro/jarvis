@@ -90,8 +90,8 @@ list:
       - блок
 
   - command:
-      action: cli
-      cli_cmd: ""
+      action: python
+      script: "unlock.py"
     voice:
       sounds:
         - ok1

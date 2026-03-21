@@ -14,6 +14,8 @@ Dev Mode ON - Включает режим разработчика
 - Развёрнутые окна
 """
 
+from time import sleep
+
 from jarvis_api import init_jarvis
 
 
@@ -41,12 +43,17 @@ async def execute(context):
         # FIX: при запуске kgx запускается вместе с активированым venv
         # FIX: долго запускает zeditor и запускает на текущем раб столе а надо на указанном
 
-        # Разворачиваем все окна (для удобной разработки)
-        jarvis.log("info", "Maximizing all windows for dev workspace...")
-        jarvis.environment.launch_app("firefox", 1)
-        jarvis.environment.launch_app("kgx --working-directory '/home/kasiro/'", 2)
-        jarvis.environment.launch_app("zeditor", 3)
-        # jarvis.environment.gtk_launch_app('')
+        jarvis.environment.launch_or_move_app_background("firefox", "firefox", 1)
+        jarvis.environment.wait_for_new_window_wmclass("firefox")
+
+        jarvis.environment.launch_or_move_app_background(
+            "kgx --working-directory '/home/kasiro/'", "org.gnome.Console", 2
+        )
+        jarvis.environment.wait_for_new_window_wmclass("org.gnome.Console")
+        jarvis.environment.launch_or_move_app_background("zeditor", "dev.zed.Zed", 3)
+        jarvis.environment.wait_for_new_window_wmclass("dev.zed.Zed")
+        jarvis.environment.gtk_launch_background("WebApp-yougile3417", 4)
+        jarvis.environment.wait_for_new_window_wmclass("WebApp-yougile3417")
 
         # Показываем уведомление
         # jarvis.system.notify(

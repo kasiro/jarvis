@@ -95,6 +95,20 @@ class Environment:
             )
             return False
 
+    def type_text_english(self, text: str):
+        wayland = self._init_wayland()
+        if not wayland:
+            return False
+
+        try:
+            wayland.type_text_english(text)
+            return True
+        except Exception as e:
+            print(
+                f"[Jarvis:ENV] Error pressing typing text({text}): {e}", file=sys.stderr
+            )
+            return False
+
     def press_enter(self):
         wayland = self._init_wayland()
         if not wayland:
@@ -247,6 +261,40 @@ class Environment:
 
         return wm.move_to_workspace(window_id, workspace)
 
+    def move_to_workspace_wmclass(self, wmclass: str, workspace: int) -> bool:
+        """
+        Переместить окно на рабочий стол
+
+        Args:
+            wmclass: wmclass окна
+            workspace: Номер рабочего стола (0-based)
+
+        Returns:
+            True если успешно
+        """
+        wm = self._init_window_manager()
+        if not wm:
+            return False
+
+        return wm.move_to_workspace_wmclass(wmclass, workspace)
+
+    def wait_for_new_window_wmclass(self, wmclass: str, timeout: float = 10) -> bool:
+        """
+        Переместить окно на рабочий стол
+
+        Args:
+            window_id: ID окна
+            workspace: Номер рабочего стола (0-based)
+
+        Returns:
+            True если успешно
+        """
+        wm = self._init_window_manager()
+        if not wm:
+            return False
+
+        return wm.wait_for_new_window_wmclass(wmclass, timeout)
+
     # ===== Application Launching =====
 
     def gtk_launch_app(self, app_name: str, workspace: int = 1):
@@ -266,6 +314,24 @@ class Environment:
 
         launcher = app_mgr.launcher
         return launcher.gtk_launch(app_name, workspace)
+
+    def gtk_launch_background(self, app_name: str, workspace: int = 1):
+        """
+        Запустить приложение на указанном рабочем столе
+
+        Args:
+            app_name: Имя приложения (zen-browser, zed)
+            workspace: Номер рабочего стола (1-based)
+
+        Returns:
+            Сообщение о результате
+        """
+        app_mgr = self._init_app_manager()
+        if not app_mgr:
+            return "❌ AppManager не доступен"
+
+        launcher = app_mgr.launcher
+        return launcher.gtk_launch_background(app_name, workspace)
 
     def launch_app(self, app_name: str, workspace: int = 1) -> str:
         """

@@ -1,6 +1,7 @@
 import ast
 import json
 import logging
+import os
 import shlex
 import subprocess
 import sys
@@ -142,6 +143,13 @@ class WindowManager:
             return True
         return False
 
+    def get_window_id_wm_class(self, wm_class: str) -> int:
+        windows = self.get_windows()
+        for w in windows:
+            if w["wm_class"] == wm_class:
+                return w["id"]
+        return 0
+
     def move_to_workspace(self, window_id: int, workspace: int) -> bool:
         """
         Перемещает окно с указанным ID на заданный рабочий стол.
@@ -152,6 +160,20 @@ class WindowManager:
             return True
         except Exception as e:
             logger.exception(f"Ошибка перемещения окна {window_id}")
+            return False
+
+    def move_to_workspace_wmclass(self, wmclass: str, workspace: int) -> bool:
+        """
+        Перемещает окно с указанным wmclass на заданный рабочий стол.
+        Возвращает True при успехе.
+        """
+        self.wait_for_new_window_wmclass(wmclass)
+        window_id = self.get_window_id_wm_class(wmclass)
+        try:
+            self._call("MoveToWorkspace", window_id, workspace)
+            return True
+        except Exception as e:
+            logger.exception(f"Ошибка перемещения окна {wmclass}")
             return False
 
     def wait_for_new_window_wmclass(self, wmclass: str, timeout: float = 10) -> bool:
@@ -194,6 +216,7 @@ class AppLauncher:
 
     def __init__(self):
         self.wm = WindowManager()
+        self.wayland = WaylandController()
 
     def launch(self, app_name: str, workspace: int) -> str:
         """
@@ -236,25 +259,19 @@ class AppLauncher:
         """
         workspace = workspace - 1
 
-        cmd = app_name
+        cmd = shlex.split("gtk-launch " + app_name)
 
         try:
-            # Получаем список окон ДО запуска
-            before_windows = self.wm.get_windows()
-            before_ids = {w["id"] for w in before_windows}
-
             # Запускаем приложение
-            subprocess.Popen(["gtk-launch", cmd])
+            subprocess.Popen(cmd)
 
             # Ждём появления нового окна
-            new_id = self.wm.wait_for_new_window(before_ids, timeout=15)
-            if new_id is None:
+            if not self.wm.wait_for_new_window_wmclass(app_name, timeout=15):
                 return f"❌ Не удалось найти окно для {app_name} после запуска."
 
             # Перемещаем на целевой рабочий стол
-            if self.wm.move_to_workspace(new_id, workspace):
-                display_workspace = workspace + 1
-                return f"✅ {app_name.capitalize()} запущен на рабочем столе {display_workspace}"
+            if self.wm.move_to_workspace_wmclass(app_name, workspace):
+                return f"✅ {app_name.capitalize()} запущен на рабочем столе {workspace + 1}"
             else:
                 return f"❌ Не удалось переместить окно {app_name}."
         except Exception as e:
@@ -269,16 +286,12 @@ class AppLauncher:
         """
         workspace = workspace - 1
 
-        cmd = app_name
+        cmd = shlex.split("gtk-launch " + app_name)
 
         try:
-            # Получаем список окон ДО запуска
-            before_windows = self.wm.get_windows()
-            before_ids = {w["id"] for w in before_windows}
-
             # Запускаем gtk приложение
             subprocess.Popen(
-                f"gtk-launch {cmd}",
+                cmd,
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
@@ -286,21 +299,20 @@ class AppLauncher:
             )
 
             # Ждём появления нового окна
-            new_id = self.wm.wait_for_new_window(before_ids, timeout=15)
-            if new_id is None:
+            if not self.wm.wait_for_new_window_wmclass(app_name, timeout=15):
                 return f"❌ Не удалось найти окно для {app_name} после запуска."
 
             # Перемещаем на целевой рабочий стол
-            if self.wm.move_to_workspace(new_id, workspace):
-                display_workspace = workspace + 1
-                return f"✅ {app_name.capitalize()} запущен на рабочем столе {display_workspace}"
+            if self.wm.move_to_workspace_wmclass(app_name, workspace):
+                self.wayland.press_super_number(workspace + 1)
+                return f"✅ {app_name.capitalize()} запущен на рабочем столе {workspace + 1}"
             else:
                 return f"❌ Не удалось переместить окно {app_name}."
         except Exception as e:
             logger.exception("Ошибка в launch")
             return f"❌ Ошибка: {str(e)}"
 
-    def launch_background(self, app_name: str, workspace: int) -> str:
+    def launch_background(self, app_name: str, wm_class: str, workspace: int) -> str:
         """
         Запускает приложение в фоне (не блокирует).
         app_name: имя приложения (из APP_MAP)
@@ -310,19 +322,32 @@ class AppLauncher:
 
         cmd = shlex.split(app_name)
 
+        minimal_env = {
+            "DISPLAY": os.environ.get("DISPLAY", ":0"),
+            "WAYLAND_DISPLAY": os.environ.get("WAYLAND_DISPLAY", "wayland-0"),
+            "XDG_RUNTIME_DIR": os.environ.get("XDG_RUNTIME_DIR"),
+            "PATH": "/usr/local/bin:/usr/bin:/bin",
+            "HOME": os.environ.get("HOME"),
+            "LANG": os.environ.get("LANG", "ru_RU.UTF-8"),
+        }
+        minimal_env = {k: v for k, v in minimal_env.items() if v is not None}
+
         try:
             # Запускаем приложение в фоне
             subprocess.Popen(
                 cmd,
+                env=minimal_env,
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 start_new_session=True,
             )
 
-            # Не ждём появления окна - возвращаем сразу
-            display_workspace = workspace + 1
-            return f"✅ {app_name.capitalize()} запущен на рабочем столе {display_workspace}"
+            # Перемещаем на целевой рабочий стол
+            if self.wm.move_to_workspace_wmclass(wm_class, workspace):
+                return f"✅ {app_name.capitalize()} запущен на рабочем столе {workspace + 1}"
+            else:
+                return f"❌ Не удалось переместить окно {app_name}."
         except Exception as e:
             logger.exception("Ошибка в launch_background")
             return f"❌ Ошибка: {str(e)}"
@@ -388,7 +413,9 @@ class AppManager:
         """
         if not self.windowManager.is_running(wm_class):
             # Запускаем в фоне
-            self.launcher.launch_background(appname, workspace)
+            self.launcher.launch_background(appname, wm_class, workspace)
+            self.wayland.press_super_number(workspace)
+            return
 
         # Переключаемся на рабочий стол
         self.wayland.press_super_number(workspace)
