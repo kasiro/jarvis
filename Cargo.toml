@@ -58,3 +58,7 @@ notify-rust = "4"
 # Windows-specific dependencies (в workspace)
 winrt-notification = "0.5"
 
+# Patch for rustpotter with new DType support
+[patch."https://github.com/Priler/rustpotter"]
+rustpotter = { path = "/tmp/rustpotter" }
+

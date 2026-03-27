@@ -18,7 +18,7 @@ async def execute(context):
     jarvis = init_jarvis(context)
     jarvis.log("info", str(context))
     jarvis.environment.press_space()
-    jarvis.environment.type_text_english(password)
+    jarvis.environment.type_text_english(password, char_delay_ms=30, hold_delay_ms=30)
     jarvis.environment.press_enter()
 
     return {"success": True}

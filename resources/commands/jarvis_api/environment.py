@@ -95,13 +95,15 @@ class Environment:
             )
             return False
 
-    def type_text_english(self, text: str):
+    def type_text_english(self, text: str, char_delay_ms=50, hold_delay_ms=30):
         wayland = self._init_wayland()
         if not wayland:
             return False
 
         try:
-            wayland.type_text_english(text)
+            wayland.type_text_english(
+                text, char_delay_ms=char_delay_ms, hold_delay_ms=hold_delay_ms
+            )
             return True
         except Exception as e:
             print(

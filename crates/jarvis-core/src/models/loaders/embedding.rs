@@ -36,6 +36,7 @@ pub fn load(registry: &ModelRegistry, model_id: &str) -> Result<Arc<EmbeddingMod
             pooling: Some(Pooling::Mean),
             quantization: QuantizationMode::None,
             output_key: Some(OutputKey::ByName("last_hidden_state")),
+            external_initializers: vec![],
         };
 
         let model = TextEmbedding::try_new_from_user_defined(user_model, Default::default())
