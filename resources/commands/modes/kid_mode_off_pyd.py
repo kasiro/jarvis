@@ -26,6 +26,8 @@ if parent_dir not in sys.path:
 
 from vpn import VPNController
 
+from resources.commands.wayland import current_dir
+
 
 async def execute(context):
     """
@@ -39,6 +41,8 @@ async def execute(context):
 
     # jarvis.log("info", "Deactivating Kid Mode...")
 
+    current_mode = jarvis.modes.get_current()
+
     # Переключаем режим
     success = await jarvis.modes.set_mode("normal")
 
@@ -46,20 +50,25 @@ async def execute(context):
         # jarvis.log("info", "Normal mode activated successfully")
         jarvis.audio.play_ok()
 
-        # 1. Останавливаем VPN через VPNController
-        # jarvis.log("info", "Stopping VPN...")
-        vpn = VPNController(server_index=0, cleanup=False)
-        vpn_result = vpn.disconnect()
-        # jarvis.log("info", f"VPN status: {vpn_result}")
+        if current_mode == "kid":
+            # 1. Останавливаем VPN через VPNController
+            vpn = VPNController(server_index=0, cleanup=False)
+            vpn.disconnect()
+            # jarvis.log("info", f"VPN status: {vpn_result}")
 
-        # 2. Закрываем Firefox с YouTube Kids
-        # jarvis.log("info", "Closing YouTube Kids...")
-        # jarvis.system.exec("killall WebApp-youtubekids8701")
-        jarvis.system.exec("pkill -f .cache/ms-playwright/firefox")
+            # 2. Закрываем Firefox с YouTube Kids
+            # jarvis.log("info", "Closing YouTube Kids...")
+            # jarvis.system.exec("killall WebApp-youtubekids8701")
+            jarvis.system.exec("pkill -f .cache/ms-playwright/firefox")
 
-        # 3. Разворачиваем все окна обратно
-        # jarvis.log("info", "Restoring windows...")
-        jarvis.environment.maximize_all_windows()
+            # 3. Разворачиваем все окна обратно
+            # jarvis.log("info", "Restoring windows...")
+            jarvis.environment.maximize_all_windows()
+        elif current_mode == "dev":
+            jarvis.system.exec("pkill -f firefox")
+            jarvis.system.exec("pkill -f zed-editor")
+            jarvis.system.exec("pkill -f kgx")
+            jarvis.system.exec("pkill -f WebApp-yougile3417")
 
         # Показываем уведомление
         # jarvis.system.notify(
@@ -69,8 +78,15 @@ async def execute(context):
 
         return {"success": True}
     else:
-        jarvis.log("error", "Failed to deactivate Kid Mode")
+        mode_descriptions = {
+            "normal": "Обычный режим",
+            "kid": "Детский режим",
+            "dev": "Режим разработчика",
+        }
+        jarvis.log("error", f"Failed to deactivate {current_mode} Mode")
         jarvis.audio.play_error()
-        jarvis.system.notify("Error", "Не удалось деактивировать детский режим")
+        jarvis.system.notify(
+            "Error", "Не удалось деактивировать " + mode_descriptions[current_mode]
+        )
 
-        return {"success": False, "error": "Failed to deactivate Kid Mode"}
+        return {"success": False, "error": f"Failed to deactivate {current_mode} Mode"}

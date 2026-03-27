@@ -11,11 +11,14 @@ from time import sleep
 
 from jarvis_api import init_jarvis
 
+from .pass_ import password
+
 
 async def execute(context):
     jarvis = init_jarvis(context)
+    jarvis.log("info", str(context))
     jarvis.environment.press_space()
-    jarvis.environment.type_text_english("truerealyexp")
+    jarvis.environment.type_text_english(password)
     jarvis.environment.press_enter()
 
     return {"success": True}
