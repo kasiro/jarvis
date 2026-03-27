@@ -2,7 +2,7 @@
 id = "jarvis-remaster"
 name = "Jarvis New"
 author = "Abraham (Priler)"
-languages = ["ru", "ua", "en"]
+languages = ["ru"]
 
 [reactions.ru]
 # app startup

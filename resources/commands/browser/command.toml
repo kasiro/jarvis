@@ -27,6 +27,23 @@ phrases.ru = [
 ]
 
 [[commands]]
+id = "open_addr"
+type = "python"
+script = "sh/open_addr.py"
+wake_word_required = true
+sounds.ru = ["ok1", "ok2", "ok3", "ok4"]
+
+phrases.ru = [
+    "найди адрес {addr}",
+    "что по адресу {addr}",
+    "что находится по адресу {addr}",
+]
+
+[commands.slots.addr]
+entity = "street address"
+context = ["по", "на", "адрес"]
+
+[[commands]]
 id = "open_wildberries"
 type = "python"
 script = "sh/open_wildberries.py"

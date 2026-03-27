@@ -1,23 +1,24 @@
 """
 Audio API - Воспроизведение звуков: play, play_ok, play_error
 """
-import sys
-import subprocess
+
 import random
+import subprocess
+import sys
 from pathlib import Path
-from typing import Optional, List
+from typing import List, Optional
 
 
 class Audio:
     """
     Audio API для воспроизведения звуков
-    
+
     Интегрируется с voices модулем Jarvis через Rust
     """
-    
+
     def __init__(self):
         self.sound_dir = self._find_sound_dir()
-    
+
     def _find_sound_dir(self) -> Optional[Path]:
         """Найти директорию со звуками"""
         # Ищем относительно текущей директории
@@ -26,27 +27,27 @@ class Audio:
             Path(__file__).parent.parent / "sound" / "voices",
             Path("/home/kasiro/Документы/jarvis/resources/sound/voices"),
         ]
-        
+
         for path in possible_paths:
             if path.exists():
                 return path
-        
+
         return None
-    
+
     def _get_sound_path(self, sound_name: str, lang: str = "ru") -> Optional[Path]:
         """
         Получить путь к звуковому файлу
-        
+
         Args:
             sound_name: Имя звука (без расширения)
             lang: Язык (ru/en)
-            
+
         Returns:
             Путь к файлу или None
         """
         if not self.sound_dir:
             return None
-        
+
         # Ищем в директории языка
         lang_dir = self.sound_dir / lang
         if lang_dir.exists():
@@ -55,15 +56,15 @@ class Audio:
                 sound_file = lang_dir / f"{sound_name}{ext}"
                 if sound_file.exists():
                     return sound_file
-        
+
         # Ищем в корневой директории звуков
         for ext in [".mp3", ".wav", ".ogg"]:
             sound_file = self.sound_dir / f"{sound_name}{ext}"
             if sound_file.exists():
                 return sound_file
-        
+
         return None
-    
+
     def _play_file(self, sound_path: Path, blocking: bool = False) -> bool:
         """
         Воспроизвести звуковой файл
@@ -81,43 +82,44 @@ class Audio:
                 # Пробуем разные плееры
                 players = [
                     ["paplay", str(sound_path)],  # PulseAudio
-                    ["aplay", str(sound_path)],   # ALSA
-                    ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", str(sound_path)],  # FFmpeg
+                    ["aplay", str(sound_path)],  # ALSA
+                    [
+                        "ffplay",
+                        "-nodisp",
+                        "-autoexit",
+                        "-loglevel",
+                        "quiet",
+                        str(sound_path),
+                    ],  # FFmpeg
                 ]
 
                 for player_cmd in players:
                     try:
                         if blocking:
                             # Синхронное воспроизведение (ждать завершения)
-                            subprocess.run(
-                                player_cmd,
-                                capture_output=True,
-                                timeout=30
-                            )
+                            subprocess.run(player_cmd, capture_output=True, timeout=30)
                         else:
                             # Асинхронное воспроизведение (фон)
                             subprocess.Popen(
                                 player_cmd,
                                 stdout=subprocess.DEVNULL,
-                                stderr=subprocess.DEVNULL
+                                stderr=subprocess.DEVNULL,
                             )
                         return True
-                    except (FileNotFoundError, subprocess.TimeoutExpired):
+                    except FileNotFoundError, subprocess.TimeoutExpired:
                         continue
 
             elif sys.platform.startswith("darwin"):
                 # macOS: afplay
                 if blocking:
                     subprocess.run(
-                        ["afplay", str(sound_path)],
-                        capture_output=True,
-                        timeout=30
+                        ["afplay", str(sound_path)], capture_output=True, timeout=30
                     )
                 else:
                     subprocess.Popen(
                         ["afplay", str(sound_path)],
                         stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL
+                        stderr=subprocess.DEVNULL,
                     )
                 return True
 
@@ -133,7 +135,7 @@ class Audio:
                     subprocess.run(
                         ["powershell", "-Command", script],
                         capture_output=True,
-                        timeout=30
+                        timeout=30,
                     )
                 else:
                     # Асинхронное воспроизведение на Windows
@@ -146,7 +148,7 @@ class Audio:
                     subprocess.Popen(
                         ["powershell", "-Command", script],
                         stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL
+                        stderr=subprocess.DEVNULL,
                     )
                 return True
 
@@ -155,7 +157,7 @@ class Audio:
         except Exception as e:
             print(f"[Jarvis:AUDIO] Failed to play {sound_path}: {e}", file=sys.stderr)
             return False
-    
+
     def play(self, sound_name: str, lang: str = "ru", blocking: bool = False) -> bool:
         """
         Воспроизвести конкретный звук
@@ -190,7 +192,7 @@ class Audio:
         sound_name = random.choice(ok_sounds)
         return self.play(sound_name, blocking=blocking)
 
-    def play_error(self, blocking: bool = False) -> bool:
+    def play_not_found(self, blocking: bool = False) -> bool:
         """
         Воспроизвести звук ошибки
 
@@ -200,9 +202,11 @@ class Audio:
         Returns:
             True если успешно
         """
-        return self.play("error", blocking=blocking)
+        return self.play("not_found", blocking=blocking)
 
-    def play_random(self, sounds: List[str], lang: str = "ru", blocking: bool = False) -> bool:
+    def play_random(
+        self, sounds: List[str], lang: str = "ru", blocking: bool = False
+    ) -> bool:
         """
         Воспроизвести случайный звук из списка
 
